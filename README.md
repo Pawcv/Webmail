@@ -6,7 +6,8 @@ Webmail project for SI .NET
 docker-compose -f docker-compose.ci.build.yml up --build
 docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d --build
 ```
-Application can be accesed on http://localhost
+Application can be accesed via http://localhost
+
 2. How to stop:
 ```shell
 docker-compose down
