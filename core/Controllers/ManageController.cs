@@ -10,11 +10,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using core.Models;
-using core.Models.ManageViewModels;
-using core.Services;
+using Core.Models;
+using Core.Models.ManageViewModels;
+using Core.Services;
 
-namespace core.Controllers
+namespace Core.Controllers
 {
     [Authorize]
     [Route("[controller]/[action]")]
@@ -495,7 +495,7 @@ namespace core.Controllers
         {
             return string.Format(
                 AuthenicatorUriFormat,
-                _urlEncoder.Encode("core"),
+                _urlEncoder.Encode("Core"),
                 _urlEncoder.Encode(email),
                 unformattedKey);
         }

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <UserSecretsId>aspnet-core-4E829598-A5AF-4A9B-AB0C-14493364F234</UserSecretsId>
+    <UserSecretsId>aspnet-Core-E535F54B-9832-4174-9EEC-ECA1919538D1</UserSecretsId>
     <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 

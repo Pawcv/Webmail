@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using core.Data;
-using core.Models;
-using core.Services;
+using Core.Data;
+using Core.Models;
+using Core.Services;
 
-namespace core
+namespace Core
 {
     public class Startup
     {

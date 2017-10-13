@@ -4,5 +4,5 @@ services:
   core:
     image: core
     build:
-      context: ./core
+      context: ./Core
       dockerfile: Dockerfile

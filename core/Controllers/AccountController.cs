@@ -10,11 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using core.Models;
-using core.Models.AccountViewModels;
-using core.Services;
+using Core.Models;
+using Core.Models.AccountViewModels;
+using Core.Services;
 
-namespace core.Controllers
+namespace Core.Controllers
 {
     [Authorize]
     [Route("[controller]/[action]")]
