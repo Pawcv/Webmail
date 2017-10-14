@@ -10,5 +10,4 @@ Webmail project for SI .NET
 2. How to stop application:
 
    Exec down.sh (or down.bat in Windows)
-
    
