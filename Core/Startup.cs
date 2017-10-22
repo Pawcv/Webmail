@@ -29,12 +29,6 @@ namespace Core
                 options.Filters.Add(new RequireHttpsAttribute());
             });
 
-            //Azure workaround for infinite redirects
-            services.Configure<ForwardedHeadersOptions>(options =>
-            {
-                options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
-            });
-
             services.AddMvc();
         }
 
