@@ -1,0 +1,13 @@
+﻿@{
+    ViewData["Title"] = "Mail";
+}
+
+<form asp-action="SendMail" method="post" id="sendMail">
+    Login:
+    <input type="email" id="login" name="login"><br>
+    Passowrd:
+    <input type="password" id="password" name="password"><br>
+    <input type="submit" value="Send mail">
+</form>
+
+<textarea rows="4" cols="50" name="message" id="message" form="sendMail">Enter message here...</textarea>
