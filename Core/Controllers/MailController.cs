@@ -32,5 +32,13 @@ namespace Core.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
+        [HttpPost]
+        public IActionResult ImapClientTest(string login, string password, string host, int port, bool useSsl)
+        {
+            var imapClientModel = new ImapClientModel(login, password, host, port, useSsl);
+            imapClientModel.Connect();
+            return View("ImapTest", imapClientModel);
+        }
     }
 }

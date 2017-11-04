@@ -11,3 +11,35 @@
 </form>
 
 <textarea rows="4" cols="50" name="message" id="message" form="sendMail">Enter message here...</textarea>
+
+<br /><br />
+
+<form asp-action="ImapClientTest" method="post" id="imapClientTest">
+    <table border="0">
+        <tr>
+            <td>Login</td>
+            <td><input type="text" name="login"></td>
+        </tr>
+        <tr>
+            <td>Password:</td>
+            <td><input type="password" name="password"></td>
+        </tr>
+        <tr>
+            <td>IMAP server address:</td>
+            <td><input type="text" name="host"></td>
+        </tr>
+        <tr>
+            <td>Port:</td>
+            <td><input type="text" name="port"></td>
+        </tr>
+        <tr>
+            <td>Use SSL:</td>
+            <td>
+                <input type="radio" name="useSsl" value="true"> Yes
+                <br />
+                <input type="radio" name="useSsl" value="false"> No
+            </td>
+        </tr>
+    </table>
+    <input type="submit" value="IMAP test" />
+</form>
