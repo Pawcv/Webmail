@@ -2,6 +2,7 @@
 
 using MailKit.Net.Imap;
 using MailKit;
+using System;
 
 namespace Core.Models
 {
@@ -57,6 +58,7 @@ namespace Core.Models
         private string _activeFolder;
         private List<IMailFolder> _folders;
         private IList<IMessageSummary> _headers;
+        private Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage> _messages;
         private bool _connected;
 
         public ImapClientModel(string login, string password, string host, int port, bool useSsl)
@@ -67,6 +69,7 @@ namespace Core.Models
             _port = port;
             _useSsl = useSsl;
             _connected = false;
+            _messages = new Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage>();
         }
 
         public void Connect()
@@ -86,9 +89,27 @@ namespace Core.Models
             _connected = false;
         }
 
-        public void DownloadFullMessage()
+        public MimeKit.MimeMessage GetMessage(string folderName, uint uid)
         {
+            return GetMessage(folderName, new UniqueId(uid));
+        }
 
+        public MimeKit.MimeMessage GetMessage(string folderName, UniqueId uid)
+        {
+            var key = Tuple.Create(folderName, uid);
+            if (!_messages.ContainsKey(key))
+            {
+                _downloadMessage(folderName, uid);
+            }
+            return _messages[key];
+        }
+
+        private void _downloadMessage(string folderName, UniqueId uid)
+        {
+            var folder = _client.GetFolder(folderName);
+            folder.Open(FolderAccess.ReadOnly);
+            _messages[Tuple.Create(folderName, uid)] = folder.GetMessage(uid);
+            folder.Close();
         }
 
 
