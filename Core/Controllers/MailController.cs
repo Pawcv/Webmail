@@ -38,6 +38,7 @@ namespace Core.Controllers
         {
             var imapClientModel = new ImapClientModel(login, password, host, port, useSsl);
             imapClientModel.Connect();
+            imapClientModel.ActiveFolder = "INBOX";
             return View("ImapTest", imapClientModel);
         }
     }

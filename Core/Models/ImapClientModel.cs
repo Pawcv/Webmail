@@ -7,16 +7,43 @@ namespace Core.Models
 {
     public class ImapClientModel
     {
-        public List<string> FolderList
+        public string ActiveFolder
+        {
+            get { return _activeFolder; }
+            set
+            {
+                if (value != _activeFolder)
+                {
+                    // active folder changed, so list of headers must be downloaded for a new folder
+                    _headers = null;
+                }
+                _activeFolder = value;
+            }
+        }
+
+        public List<IMailFolder> Folders
         {
             get
             {
-                if (_folderList == null)
+                if (_folders == null)
                 {
-                    _folderList = new List<string>();
-                    _getFolderNames();
+                    _folders = new List<IMailFolder>();
+                    _downloadFolders();
                 }
-                return _folderList;
+                return _folders;
+            }
+        }
+
+        // list of headers in active folder
+        public IList<IMessageSummary> Headers
+        {
+            get
+            {
+                if (_headers == null)
+                {
+                    _downloadHeaders();
+                }
+                return _headers;
             }
         }
 
@@ -27,7 +54,9 @@ namespace Core.Models
         private readonly bool _useSsl;
 
         private ImapClient _client;
-        private List<string> _folderList;
+        private string _activeFolder;
+        private List<IMailFolder> _folders;
+        private IList<IMessageSummary> _headers;
         private bool _connected;
 
         public ImapClientModel(string login, string password, string host, int port, bool useSsl)
@@ -57,30 +86,32 @@ namespace Core.Models
             _connected = false;
         }
 
-        public void DownloadHeaders()
-        {
-
-        }
-
         public void DownloadFullMessage()
         {
 
         }
 
 
-        private void _getFolderNames()
+        private void _downloadFolders()
         {
             var root = _client.GetFolder(_client.PersonalNamespaces[0]);
-            _getFolderNamesRecursively(root);
+            _downloadFoldersRecursively(root);
         }
 
-        private void _getFolderNamesRecursively(IMailFolder folder)
+        private void _downloadFoldersRecursively(IMailFolder folder)
         {
-            _folderList.Add(folder.FullName);
+            _folders.Add(folder);
             foreach (var subfolder in folder.GetSubfolders(false))
             {
-                _getFolderNamesRecursively(subfolder);
+                _downloadFoldersRecursively(subfolder);
             }
+        }
+        private void _downloadHeaders()
+        {
+            var folder = _client.GetFolder(ActiveFolder);
+            folder.Open(FolderAccess.ReadOnly);
+            _headers = folder.Fetch(0, -1, MessageSummaryItems.Full | MessageSummaryItems.UniqueId);
+            folder.Close();
         }
     }
 }
