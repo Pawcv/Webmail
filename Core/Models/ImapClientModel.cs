@@ -60,6 +60,7 @@ namespace Core.Models
         private IList<IMessageSummary> _headers;
         private Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage> _messages;
         private bool _connected;
+        private bool _disposed;
 
         public ImapClientModel(string login, string password, string host, int port, bool useSsl)
         {
@@ -136,7 +137,26 @@ namespace Core.Models
 
         public void Dispose()
         {
-            _client.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _client.Dispose();
+                }
+                _disposed = true;
+            }
+        }
+
+        ~ImapClientModel()
+        {
+            Dispose(false);
         }
     }
 }
