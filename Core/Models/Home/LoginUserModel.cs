@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Core.Models.Home
 {
-    public class HomeUserModel
+    public class LoginUserModel
     {
         [Required]
         [MaxLength(256)]
@@ -15,11 +15,5 @@ namespace Core.Models.Home
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; }
-
-        [Display(Name = "Repeated password")]
-        [Required]
-        [DataType(DataType.Password)]
-        [Compare(nameof(Password))]
-        public string RepeatedPassword { get; set; }
     }
 }

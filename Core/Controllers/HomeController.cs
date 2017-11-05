@@ -45,7 +45,7 @@ namespace Core.Controllers
         }
 
         [HttpPost]
-        public IActionResult Register([Bind("Username,Password,RepeatedPassword")] HomeUserModel model)
+        public IActionResult Register([Bind("Username,Password,RepeatedPassword")] RegisterUserModel model)
         {
             if (ModelState.IsValid)
             {
@@ -57,9 +57,12 @@ namespace Core.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(string username, string password)
+        public IActionResult Login([Bind("Username,Password")] LoginUserModel model)
         {
-            //Login logic
+            if (ModelState.IsValid)
+            {
+                //Login logic
+            }
             return RedirectToAction("Index");
         }
     }
