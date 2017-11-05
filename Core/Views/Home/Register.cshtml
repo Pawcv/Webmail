@@ -1,5 +1,6 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿
+@{
+    ViewData["Title"] = "Register";
 }
 
 @section head {
@@ -9,33 +10,33 @@
 @model Core.Models.Home.HomeUserModel
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }
 
-
-
-<h2>Login</h2>
+<h2>Register</h2>
 
 <div id="prompt-div">
-    <form asp-action="Login" method="post" id="login" class="main-form">
+    <form asp-action="Register" method="post" id="register" class="main-form">
         <div asp-validation-summary="ModelOnly"></div>
-
+        
         <div>
             <label asp-for="Username"></label>
             <input asp-for="Username" />
             <span asp-validation-for="Username" class="warning-message"></span>
         </div>
-
+        
         <div>
             <label asp-for="Password"></label>
             <input asp-for="Password" />
             <span asp-validation-for="Password" class="warning-message"></span>
         </div>
 
-
-        <input type="submit" value="Login">
+        <div>
+            <label asp-for="RepeatedPassword"></label>
+            <input asp-for="RepeatedPassword" />
+            <span asp-validation-for="RepeatedPassword" class="warning-message"></span>
+        </div>
+        <input type="submit" value="Register">
     </form>
-
-    <a asp-action="Register">You don't have an account? Create one now.</a>
 
 </div>

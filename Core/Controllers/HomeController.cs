@@ -5,28 +5,43 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Core.Models;
+using Core.Models.Home;
 
 namespace Core.Controllers
 {
     public class HomeController : Controller
     {
+        [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
 
-        public IActionResult About()
+        [HttpGet]
+        public IActionResult Register()
         {
-            ViewData["Message"] = "Your application description page.";
+            ViewData["Message"] = "Register";
 
             return View();
         }
 
-        public IActionResult Contact()
+        [HttpPost]
+        public IActionResult Register([Bind("Username,Password,RepeatedPassword")] HomeUserModel model)
         {
-            ViewData["Message"] = "Your contact page.";
+            if (ModelState.IsValid)
+            {
+                // Create user logic
+                return RedirectToAction("Index");
+            }
 
-            return View();
+            return RedirectToAction("Register");
+        }
+
+        [HttpPost]
+        public IActionResult Login(string username, string password)
+        {
+            //Login logic
+            return RedirectToAction("Index");
         }
 
         public IActionResult Error()
