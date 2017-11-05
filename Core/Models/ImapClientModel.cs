@@ -6,7 +6,7 @@ using System;
 
 namespace Core.Models
 {
-    public class ImapClientModel
+    public class ImapClientModel : IDisposable
     {
         public string ActiveFolder
         {
@@ -70,11 +70,11 @@ namespace Core.Models
             _useSsl = useSsl;
             _connected = false;
             _messages = new Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage>();
+            _client = new ImapClient();
         }
 
         public void Connect()
         {
-            _client = new ImapClient();
             _client.ServerCertificateValidationCallback = (s, c, h, e) => true;
             _client.Connect(_host, _port, _useSsl);
             _client.AuthenticationMechanisms.Remove("XOAUTH2");
@@ -85,7 +85,6 @@ namespace Core.Models
         public void Disconnect()
         {
             _client.Disconnect(true);
-            _client.Dispose();
             _connected = false;
         }
 
@@ -133,6 +132,11 @@ namespace Core.Models
             folder.Open(FolderAccess.ReadOnly);
             _headers = folder.Fetch(0, -1, MessageSummaryItems.Full | MessageSummaryItems.UniqueId);
             folder.Close();
+        }
+
+        public void Dispose()
+        {
+            _client.Dispose();
         }
     }
 }
