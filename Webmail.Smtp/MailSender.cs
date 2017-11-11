@@ -29,7 +29,7 @@ namespace Webmail.Smtp
             this.SecurityOptions = securityOptions;
         }
 
-        public async Task SendMailAsync(MimeMessage message, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task SendMailAsync(MimeMessage message, ITransferProgress progressHandler = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var client = await GetAuthenticatedClientAsync(cancellationToken))
             {
@@ -39,10 +39,16 @@ namespace Webmail.Smtp
                     NewLineFormat = NewLineFormat.Dos
                 };
 
-                // TODO raportowanie postępów
-                ITransferProgress progress = null;
-
-                await client.SendAsync(formatOptions, message, cancellationToken, progress);
+                try
+                {
+                    await client.SendAsync(formatOptions, message, cancellationToken, progressHandler);
+                }
+                catch(Exception e)
+                {
+                    var errorMessage = "Exception occured while sending email!";
+                    logger.Warn(e, errorMessage);
+                    throw new Exception(errorMessage, e);
+                }
             }
         }
 
@@ -66,16 +72,25 @@ namespace Webmail.Smtp
                 logger.Info($"Connecting to {this.Host}:{this.Port} with security options {this.SecurityOptions}...");
                 await client.ConnectAsync(this.Host, this.Port, this.SecurityOptions, cancellationToken);
                 logger.Info($"Connected!");
+            }
+            catch (Exception e)
+            {
+                var errorMessage = "Exception occured while trying to connect!";
+                logger.Warn(e, errorMessage);
+                throw new Exception(errorMessage, e);
+            }
 
+            try
+            {
                 logger.Info($"Authenticating with given credentials...");
                 await client.AuthenticateAsync(this.Credentials, cancellationToken);
                 logger.Info($"Authenticated!");
             }
             catch (Exception e)
             {
-                logger.Warn(e, "Exception occured when connecting or authenticating.");
-                // TODO zrobić sensowne logowanie błędów
-                throw;
+                var errorMessage = "Exception occured while trying to authenticate!";
+                logger.Warn(e, errorMessage);
+                throw new Exception(errorMessage, e);
             }
 
             return client;
