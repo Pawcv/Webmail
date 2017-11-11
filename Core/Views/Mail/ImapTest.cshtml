@@ -1,0 +1,23 @@
+﻿
+@{
+    ViewData["Title"] = "ImapTest";
+}
+
+<p>Folders:</p>
+<ul>
+    @foreach (var folder in Model.Folders)
+    {
+        <li>@folder.FullName</li>
+    }
+</ul>
+
+<p>Headers:</p>
+<ul>
+    @foreach (var summary in Model.Headers)
+    {
+        <li>@summary.UniqueId - @summary.Envelope.Subject (@summary.Envelope.From)</li>
+    }
+</ul>
+
+<p>Message:</p>
+@Model.GetMessage("INBOX", 4).TextBody
