@@ -40,8 +40,9 @@ namespace Core.Controllers
             var imapClientModel = new ImapClientModel(login, password, host, port, useSsl);
             imapClientModel.Connect();
             imapClientModel.ActiveFolder = "INBOX";
-            return View("ImapTest", imapClientModel);
+            return View("ShowMailsView", imapClientModel);
         }
+
 
         [HttpGet]
         public IActionResult CreateMail()
@@ -54,7 +55,7 @@ namespace Core.Controllers
         public IActionResult CreateMail(MailMessageModel model)
         {
             var message = new MimeMessage();
-            // Trzeba by pobrać nadawcę z bazy?
+            // Trzeba by pobrać swoj adres z bazy?
             message.From.Add(new MailboxAddress("Testowy nadawca", "test@test.com"));
             message.To.Add(new MailboxAddress(model.Recipent, model.Recipent));
             message.Subject = model.Title;
