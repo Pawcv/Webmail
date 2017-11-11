@@ -28,6 +28,11 @@
 
         @Html.TextBoxFor(model => model.Recipent, new { @class = "mailInput", @placeholder = "Enter recipent here..." })
 
+        @Html.TextBoxFor(model => model.Login, new { @class = "mailInput", @placeholder = "Enter your login here..." })
+        @Html.PasswordFor(model => model.Password, new { @class = "mailInput", @placeholder = "Enter your password here..." })
+
+
+
         @Html.TextAreaFor(model => model.Content, new { @id = "summernote" })
 
         <button class="button-full" id="btnSubmit" type="submit">

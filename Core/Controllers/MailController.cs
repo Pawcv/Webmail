@@ -54,16 +54,9 @@ namespace Core.Controllers
         [HttpPost]
         public IActionResult CreateMail(MailMessageModel model)
         {
-            var message = new MimeMessage();
-            // Trzeba by pobrać swoj adres z bazy?
-            message.From.Add(new MailboxAddress("Testowy nadawca", "test@test.com"));
-            message.To.Add(new MailboxAddress(model.Recipent, model.Recipent));
-            message.Subject = model.Title;
-
-            message.Body = new TextPart("html")
-            {
-                Text = model.Content
-            };
+            model.Connect();
+            model.SendMessage();
+            model.Disconnect();
 
 
             return RedirectToAction("Index");
