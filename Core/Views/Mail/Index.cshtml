@@ -2,15 +2,29 @@
     ViewData["Title"] = "Mail";
 }
 
-<form asp-action="SendMail" method="post" id="sendMail">
-    Login:
-    <input type="email" id="login" name="login"><br>
-    Passowrd:
-    <input type="password" id="password" name="password"><br>
-    <input type="submit" value="Send mail">
-</form>
+@section head {
+    <link rel="Stylesheet" href="@Href("~/css/styles.css")" />
+}
 
-<textarea rows="4" cols="50" name="message" id="message" form="sendMail">Enter message here...</textarea>
+<div>
+    <div id="actionsRow">
+        <form asp-action="CreateMail" method="get" id="createMail">
+            <input class="button" type="submit" value="Create new">
+        </form>
+    </div>
+
+    <div id="mailsDiv">
+        <div id="foldersColumn">
+            <div id="foldersContent" class="content">
+
+            </div>
+        </div>
+
+        <div id="mailsColumn">
+            <div id="mailsContent" class="content"></div>
+        </div>
+    </div>
+</div>
 
 <br /><br />
 

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using Core.Models;
+using MimeKit;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -40,6 +41,31 @@ namespace Core.Controllers
             imapClientModel.Connect();
             imapClientModel.ActiveFolder = "INBOX";
             return View("ImapTest", imapClientModel);
+        }
+
+        [HttpGet]
+        public IActionResult CreateMail()
+        {
+            MailMessageModel model = new MailMessageModel();
+            return View("CreateMail");
+        }
+
+        [HttpPost]
+        public IActionResult CreateMail(MailMessageModel model)
+        {
+            var message = new MimeMessage();
+            // Trzeba by pobrać nadawcę z bazy?
+            message.From.Add(new MailboxAddress("Testowy nadawca", "test@test.com"));
+            message.To.Add(new MailboxAddress(model.Recipent, model.Recipent));
+            message.Subject = model.Title;
+
+            message.Body = new TextPart("html")
+            {
+                Text = model.Content
+            };
+
+
+            return RedirectToAction("Index");
         }
     }
 }

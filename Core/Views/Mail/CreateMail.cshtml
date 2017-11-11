@@ -1,0 +1,39 @@
+﻿
+@{
+    ViewData["Title"] = "CreateMail";
+}
+
+@section head {
+    <link rel="Stylesheet" href="@Href("~/css/styles.css")" />
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_Summernote");}
+
+    <script>
+            $(document).ready(function () {
+                $('#summernote').summernote({ height: 300});
+            });
+    </script>
+}
+
+@model Core.Models.MailMessageModel
+
+<h2>CreateMail</h2>
+
+<div>
+    @using (Html.BeginForm())
+    {
+        @Html.TextBoxFor(model => model.Title, new { @class = "mailInput", @placeholder = "Enter topic here..." })
+
+        @Html.TextBoxFor(model => model.Recipent, new { @class = "mailInput", @placeholder = "Enter recipent here..." })
+
+        @Html.TextAreaFor(model => model.Content, new { @id = "summernote" })
+
+        <button class="button-full" id="btnSubmit" type="submit">
+            Create mail
+        </button>
+    }
+
+</div>
+

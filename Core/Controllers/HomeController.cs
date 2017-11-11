@@ -61,7 +61,12 @@ namespace Core.Controllers
         {
             if (ModelState.IsValid)
             {
-                //Login logic
+                // authorizing user logic
+                // TODO
+
+
+                // if authorized redirect to mail view
+                return RedirectToAction("Index", "Mail");
             }
             return RedirectToAction("Index");
         }
