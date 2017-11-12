@@ -12,7 +12,6 @@ namespace Core.Controllers
 {
     public class HomeController : Controller
     {
-        [HttpGet]
         public IActionResult Index()
         {
             return RedirectToAction("Index", "Mail");
