@@ -5,14 +5,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Core.Models;
+using Core.Models.Home;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Core.Controllers
 {
     public class HomeController : Controller
     {
+        [HttpGet]
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Index", "Mail");
         }
 
         public IActionResult About()

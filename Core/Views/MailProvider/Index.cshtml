@@ -1,0 +1,36 @@
+﻿
+@{
+    ViewData["Title"] = "ChoosingProviderView";
+}
+
+@section head {
+    <link rel="Stylesheet" href="@Href("~/css/MailProvider/styles.css")" />
+}
+
+<form asp-action="ChooseProvider" method="post" id="chooseProvider" class="choose-provider-form">
+    <label>IMAP server name</label>
+    <input type="url" id="imapServerName" name="login">
+
+    <label>IMAP server port</label>
+    <input type="number" id="imapServerPort" name="imapServerPort">
+
+    <label>SMTP server name</label>
+    <input type="url" id="smtpServerName" name="smtpServerName">
+    <label>SMTP server port</label>
+    <input type="number" id="smtpServerPort" name="smtpServerPort">
+
+
+    <label>Username</label>
+    <input type="text" id="username" name="username">
+
+
+    <label>Password:</label>
+    <input type="password" id="password" name="password">
+
+
+    <label>Email:</label>
+    <input type="email" id="emailAddress" name="emailAddress">
+
+
+    <input type="submit" value="Submit">
+</form>

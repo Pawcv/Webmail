@@ -1,0 +1,38 @@
+﻿
+@{
+    ViewData["Title"] = "ShowMailsView";
+}
+
+@section head {
+    <link rel="Stylesheet" href="@Href("~/css/styles.css")" />
+}
+
+@model Core.Models.ImapClientModel
+
+<div>
+    <div id="actionsRow">
+        <form asp-action="CreateMail" method="get" id="createMail">
+            <input class="button" type="submit" value="Create new">
+        </form>
+    </div>
+
+    <div id="mailsDiv">
+        <div id="foldersColumn">
+            <div id="foldersContent" class="content">
+                <p> Foldery</p>
+                @{
+                    Html.RenderPartial("FolderPartialView.cshtml", Model);
+                }
+            </div>
+        </div>
+
+        <div id="mailsColumn">
+            <div id="mailsContent" class="content">
+                <p>Nagłówki maili z wybranego folderu</p>
+                @{
+                    Html.RenderPartial("HeadersPartialView.cshtml", Model);
+                }
+            </div>
+        </div>
+    </div>
+</div>

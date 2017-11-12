@@ -1,0 +1,42 @@
+﻿
+@{
+    ViewData["Title"] = "Register";
+}
+
+@section head {
+    <link rel="Stylesheet" href="@Href("~/css/styles.css")" />
+}
+
+@model Core.Models.Home.RegisterUserModel
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}
+
+<h2>Register</h2>
+
+<div id="prompt-div">
+    <form asp-action="Register" method="post" id="register" class="main-form">
+        <div asp-validation-summary="ModelOnly"></div>
+        
+        <div>
+            <label asp-for="Username"></label>
+            <input asp-for="Username" />
+            <span asp-validation-for="Username" class="warning-message"></span>
+        </div>
+        
+        <div>
+            <label asp-for="Password"></label>
+            <input asp-for="Password" />
+            <span asp-validation-for="Password" class="warning-message"></span>
+        </div>
+
+        <div>
+            <label asp-for="RepeatedPassword"></label>
+            <input asp-for="RepeatedPassword" />
+            <span asp-validation-for="RepeatedPassword" class="warning-message"></span>
+        </div>
+        <input type="submit" value="Register">
+    </form>
+
+</div>
