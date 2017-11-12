@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Core.Models;
 using Core.Models.Home;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Core.Controllers
 {
@@ -14,7 +15,7 @@ namespace Core.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Index", "Mail");
         }
 
         public IActionResult About()
@@ -34,41 +35,6 @@ namespace Core.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-
-        [HttpGet]
-        public IActionResult Register()
-        {
-            ViewData["Message"] = "Register";
-
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult Register([Bind("Username,Password,RepeatedPassword")] RegisterUserModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                // Create user logic
-                return RedirectToAction("Index");
-            }
-
-            return RedirectToAction("Register");
-        }
-
-        [HttpPost]
-        public IActionResult Login([Bind("Username,Password")] LoginUserModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                // authorizing user logic
-                // TODO
-
-
-                // if authorized redirect to mail view
-                return RedirectToAction("Index", "Mail");
-            }
-            return RedirectToAction("Index");
         }
     }
 }
