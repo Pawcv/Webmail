@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Webmail.Data\Webmail.Data.csproj" />
+    <ProjectReference Include="..\Webmail.Data\Webmail.Data.csproj" />
   </ItemGroup>
 
 </Project>

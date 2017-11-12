@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Webmail.Smtp", "Webmail.Smt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Smpt.Tests", "Smpt.Tests\Smpt.Tests.csproj", "{DB6B945C-D01E-4F67-8F65-B3CF2231DE75}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Webmail.Data", "..\Webmail.Data\Webmail.Data.csproj", "{745F7EBF-BB79-49CA-9868-674BA564FA3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Webmail.Data", "Webmail.Data\Webmail.Data.csproj", "{745F7EBF-BB79-49CA-9868-674BA564FA3F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
