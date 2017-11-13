@@ -69,8 +69,6 @@ namespace Core.Controllers
             return View("ShowMailsView", imapClientModel);
         }
 
-
-        [HttpGet]
         public IActionResult CreateMail()
         {
             MailMessageModel model = new MailMessageModel();
