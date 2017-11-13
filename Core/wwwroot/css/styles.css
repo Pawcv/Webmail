@@ -72,12 +72,21 @@ h1, h2, h3, h4, h5, h6 {
     height: 800px;
 }
 
+#mailsContent {
+    overflow: auto;
+}
+
+#foldersContent {
+    overflow-y: auto;
+}
+
 #mailsDiv {
     display: flex;
 }
 
 #messageContent {
     display: none;
+    overflow: auto;
 }
 
 .content {
