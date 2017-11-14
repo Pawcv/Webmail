@@ -13,6 +13,8 @@ using Microsoft.Extensions.Options;
 using Core.Models;
 using Core.Models.ManageViewModels;
 using Core.Services;
+using Core.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Core.Controllers
 {
@@ -464,6 +466,67 @@ namespace Core.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> SelectImapProvider()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+            var model = new ImapProviderViewModel();
+            if (user.ImapModel != null)
+            { 
+                model.host = user.ImapModel.host;
+                model.login = user.ImapModel.login;
+                model.password = user.ImapModel.password;
+                model.port = user.ImapModel.port;
+                model.useSsl = user.ImapModel.useSsl;
+            }
+
+            return View(model);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SelectImapProvider(ImapProviderViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            var imapModel = user.ImapModel;
+            if (imapModel == null)
+            {
+                user.ImapModel = new ImapProviderModel()
+                {
+                    login = model.login,
+                    host = model.host,
+                    port = model.port,
+                    password = model.password,
+                    useSsl = model.useSsl,
+                };
+            } else
+            {
+                user.ImapModel.login = model.login;
+                user.ImapModel.host = model.host;
+                user.ImapModel.port = model.port;
+                user.ImapModel.password = model.password;
+                user.ImapModel.useSsl = model.useSsl;
+            }
+            await _userManager.UpdateAsync(user);
+            
+            StatusMessage = "Your imap provider has been updated";
+            return RedirectToAction(nameof(Index));
+        }
         #region Helpers
 
         private void AddErrors(IdentityResult result)
