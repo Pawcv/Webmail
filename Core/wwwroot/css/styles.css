@@ -1,0 +1,136 @@
+﻿/* REGISTER AND LOGIN VIEWS  */
+
+h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+}
+
+#prompt-div {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.warning-message {
+    font-size: small;
+}
+
+.main-form input {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.main-form input[type=submit] {
+    background-color: #4CAF50;
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    cursor: pointer;
+}
+
+.main-form input[type=submit]:hover {
+    background-color: #6CCF70;
+}
+
+
+/* CREATING MAIL */
+.mailInput {
+    width: 100%;
+    resize: none;
+}
+
+.button-full {
+    background-color: #4CAF50;
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* MAIL SHOWING VIEW*/
+#actionsRow {
+    background-color: #F0F0F0;
+    width: 100%;
+    height: 50px;
+}
+
+#foldersColumn {
+    background-color: #E0E0E0;
+    width: 30%;
+    height: 800px;
+
+}
+
+#mailsColumn {
+    background-color: #F1F1F1;
+    flex-grow: 1;
+    height: 800px;
+}
+
+#mailsContent {
+    overflow: auto;
+}
+
+#foldersContent {
+    overflow-y: auto;
+}
+
+#mailsDiv {
+    display: flex;
+}
+
+#messageContent {
+    display: none;
+    overflow: auto;
+}
+
+.content {
+    width: 100%;
+    height: 100%;
+}
+
+.button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    cursor: pointer;
+}
+
+.folders {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333333;
+}
+
+.folder {
+    width: 100%;
+    height: 30px;
+    background-color: green;
+    list-style-type: none;
+    list-style-position: inside;
+}
+
+.headers {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333333;
+}
+
+
+.header {
+    width: 100%;
+    height: 30px;
+    background-color: green;
+    list-style-type: none;
+    list-style-position: inside;
+}
