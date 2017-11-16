@@ -7,6 +7,8 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Core.Data;
 
 namespace Core
 {
@@ -14,7 +16,8 @@ namespace Core
     {
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            var host = BuildWebHost(args);
+            host.Run();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
