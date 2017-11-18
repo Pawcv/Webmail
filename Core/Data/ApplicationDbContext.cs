@@ -10,6 +10,8 @@ namespace Core.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
+        public DbSet<ImapProviderModel> ImapProviderModel { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
