@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Core.Services;
 using Core.Data;
 using System.Security.Claims;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 
 namespace Core.Controllers
@@ -40,34 +41,10 @@ namespace Core.Controllers
             _dbContext = dbContext;
         }
 
-        public async Task<IActionResult> Index()
+        [Authorize]
+        public IActionResult Index()
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (userId == null)
-            {
-                throw new ApplicationException($"User ID was not found in user claims!");
-            }
-
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
-
-            if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
-
-            if (user.ImapModel == null)
-            {
-                return RedirectToAction("SelectImapProvider", "Manage");
-            }
-
-            ImapClientModel model = new ImapClientModel(user.ImapModel.login,
-                                                        user.ImapModel.password,
-                                                        user.ImapModel.host,
-                                                        user.ImapModel.port,
-                                                        user.ImapModel.useSsl);
-
-            return RedirectToAction("Mail", "ShowMailsView", model);
+            return RedirectToAction("Index", "Mail");
         }
 
         public IActionResult About()

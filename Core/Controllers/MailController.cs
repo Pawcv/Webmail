@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Security.Claims;
+using Core.Data;
 using Core.Models;
 using Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 
@@ -24,25 +26,53 @@ namespace Core.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
+        private readonly ApplicationDbContext _dbContext;
 
         public MailController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            ApplicationDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _logger = logger;
+            _dbContext = dbContext;
         }
 
         // GET: /<controller>/
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var id = User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var user = _userManager.FindByIdAsync(id).Result;
-            return View();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            if (user.ImapModel == null)
+            {
+                return RedirectToAction("SelectImapProvider", "Manage");
+            }
+
+            ImapClientModel model = new ImapClientModel(user.ImapModel.login,
+                user.ImapModel.password,
+                user.ImapModel.host,
+                user.ImapModel.port,
+                user.ImapModel.useSsl);
+
+            model.Connect();
+            model.ActiveFolder = "INBOX";
+            return View("ShowMailsView", model);
         }
 
         [HttpPost]
