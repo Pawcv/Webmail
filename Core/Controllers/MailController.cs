@@ -64,14 +64,20 @@ namespace Core.Controllers
                 return RedirectToAction("SelectImapProvider", "Manage");
             }
 
-            ImapClientModel model = new ImapClientModel(user.ImapModel.login,
-                user.ImapModel.password,
-                user.ImapModel.host,
-                user.ImapModel.port,
-                user.ImapModel.useSsl);
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            {
+                model = new ImapClientModel(user.ImapModel.login,
+                    user.ImapModel.password,
+                    user.ImapModel.host,
+                    user.ImapModel.port,
+                    user.ImapModel.useSsl);
+            }
 
-            model.Connect();
-            model.ActiveFolder = "INBOX";
+            if (!model.IsConnected)
+            {
+                model.Connect();
+                model.ActiveFolder = "INBOX";
+            }
             return View("ShowMailsView", model);
         }
 
