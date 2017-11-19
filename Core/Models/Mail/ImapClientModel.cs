@@ -123,8 +123,11 @@ namespace Core.Models
 
         private void _downloadFoldersRecursively(IMailFolder folder)
         {
-            _folders.Add(folder);
-            foreach (var subfolder in folder.GetSubfolders(false))
+            if (!folder.FullName.Equals(""))
+            {
+                Folders.Add(folder);
+            }
+            foreach (var subfolder in folder.GetSubfolders())
             {
                 _downloadFoldersRecursively(subfolder);
             }

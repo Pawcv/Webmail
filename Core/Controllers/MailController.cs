@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Net;
 using System.Security.Claims;
 using Core.Data;
 using Core.Models;
@@ -78,6 +79,33 @@ namespace Core.Controllers
                 model.Connect();
                 model.ActiveFolder = "INBOX";
             }
+            return View("ShowMailsView", model);
+        }
+
+        public async Task<IActionResult> ChangeActiveFolder(string folderName)
+        {
+            folderName = WebUtility.UrlDecode(folderName);
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            {
+                model = new ImapClientModel(user.ImapModel.login,
+                    user.ImapModel.password,
+                    user.ImapModel.host,
+                    user.ImapModel.port,
+                    user.ImapModel.useSsl);
+            }
+
+            model.ActiveFolder = folderName;
+
             return View("ShowMailsView", model);
         }
 

@@ -2,8 +2,11 @@
 <div class="list-group">
     @foreach (var folder in Model.Folders)
     {
-        <a href="#" class="list-group-item">@folder.FullName</a>
+        <form asp-action="ChangeActiveFolder" method="get" id="changeActiveFolder">
+            <input name="folderName" type="hidden" value=@System.Net.WebUtility.UrlEncode(@folder.FullName)>
+            <div class="form-group">
+                <button type="submit" class="btn btn-default btn-block">@folder.FullName</button>
+            </div>
+        </form>
     }
 </div>
-
-
