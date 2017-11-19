@@ -152,7 +152,7 @@ namespace Core.Models
                 {
                     _client.Dispose();
                 }
-                ImapClientModelsDictionary.TryRemove(_login, out var _);
+                ImapClientModelsDictionary.TryRemove(_login + _password, out var _);
                 _disposed = true;
             }
         }
