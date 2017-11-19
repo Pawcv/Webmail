@@ -10,29 +10,27 @@ namespace Core.Models
 {
     public class MailMessageModel
     {
-        public string Login { get; set; }
-        public string Password { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
         public string Recipent { get; set; }
 
         private SmtpClient _client;
 
-        public void Connect()
+        public void Connect(ApplicationUser user)
         {
             var serverName = "smtp.";
-            serverName += Login.Split('@')[1];
+            serverName += user.ImapModel.login.Split('@')[1];
 
             _client = new SmtpClient();
             _client.Connect(serverName, 465, true);
-            _client.Authenticate(Login, Password);
+            _client.Authenticate(user.ImapModel.login, user.ImapModel.password);
         }
 
-        public void SendMessage()
+        public void SendMessage(ApplicationUser user)
         {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Testowy nadawca", Login));
-            message.To.Add(new MailboxAddress("Testowy odbiorca", Recipent));
+            message.From.Add(new MailboxAddress(user.UserName, user.ImapModel.login));
+            message.To.Add(new MailboxAddress(Recipent, Recipent));
             message.Subject = Title;
 
             message.Body = new TextPart("html")

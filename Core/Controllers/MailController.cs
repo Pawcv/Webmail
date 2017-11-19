@@ -140,10 +140,19 @@ namespace Core.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateMail(MailMessageModel model)
+        public async Task<IActionResult> CreateMail(MailMessageModel model)
         {
-            model.Connect();
-            model.SendMessage();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            model.Connect(user);
+            model.SendMessage(user);
             model.Disconnect();
 
             return RedirectToAction("Index");
