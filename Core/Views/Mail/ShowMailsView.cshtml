@@ -15,7 +15,7 @@
             $('messageSpinner').hide();
         }
 
-        function GetMessage(id) {
+        function GetMessage(folderName,id) {
             $("#messageSpinner").show();
             $("#mailsContent").hide();
 
@@ -24,7 +24,7 @@
 
             $.ajax({
                 type: 'GET',
-                url: '/Mail/GetMessage?id=' + id,
+                url: '/Mail/GetMessage?id=' + id + '&folderName=' + folderName,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
                     $("#messageContent").show();
@@ -49,7 +49,7 @@
             var buttons = $("#mailsContent").find('a');
             $.each(buttons, function (index, value) {
                 $(value).click(function () {
-                    GetMessage(index + 1);
+                    GetMessage("@Model.ActiveFolder", index + 1);
                 });
             });
 
@@ -79,7 +79,6 @@
 
         <div id="mailsColumn">
             <div id="mailsContent" class="content">
-                <p>Nagłówki maili z wybranego folderu</p>
                 @{
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);
                 }
