@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Core.Models.ManageViewModels
 {
-    public class ImapProviderViewModel
+    public class ProviderViewModel
     {
         [Required]
         public string login { get; set; }
@@ -16,9 +16,14 @@ namespace Core.Models.ManageViewModels
         public string password { get; set; }
 
         [Required]
-        public string host { get; set; }
+        public string imaphost { get; set; }
 
-        public int port { get; set; }
+        public int imapport { get; set; }
+
+        [Required]
+        public string smtphost { get; set; }
+
+        public int smtpport { get; set; }
 
         [Display(Name = "Use SSL")]
         public bool useSsl { get; set; }

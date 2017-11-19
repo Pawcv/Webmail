@@ -1,4 +1,4 @@
-﻿@model ImapProviderViewModel
+﻿@model ProviderViewModel
 @{
     ViewData["Title"] = "Profile";
     //ViewData.AddActivePage(ManageNavPages.SelectImapProvider);
@@ -23,14 +23,24 @@
                 <span asp-validation-for="password" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="host"></label>
-                <input asp-for="host" class="form-control" />
-                <span asp-validation-for="host" class="text-danger"></span>
+                <label asp-for="imaphost"></label>
+                <input asp-for="imaphost" class="form-control" />
+                <span asp-validation-for="imaphost" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="port"></label>
-                <input asp-for="port" class="form-control" />
-                <span asp-validation-for="port" class="text-danger"></span>
+                <label asp-for="imapport"></label>
+                <input asp-for="imapport" class="form-control" />
+                <span asp-validation-for="imapport" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="smtphost"></label>
+                <input asp-for="smtphost" class="form-control" />
+                <span asp-validation-for="smtphost" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="smtpport"></label>
+                <input asp-for="smtpport" class="form-control" />
+                <span asp-validation-for="smtpport" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="useSsl"></label>

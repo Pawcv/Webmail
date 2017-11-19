@@ -474,13 +474,13 @@ namespace Core.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-            var model = new ImapProviderViewModel();
+            var model = new ProviderViewModel();
             if (user.ImapModel != null)
             { 
-                model.host = user.ImapModel.host;
+                model.imaphost = user.ImapModel.ImapHost;
                 model.login = user.ImapModel.login;
                 model.password = user.ImapModel.password;
-                model.port = user.ImapModel.port;
+                model.imapport = user.ImapModel.ImapPort;
                 model.useSsl = user.ImapModel.useSsl;
             }
 
@@ -490,7 +490,7 @@ namespace Core.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SelectImapProvider(ImapProviderViewModel model)
+        public async Task<IActionResult> SelectImapProvider(ProviderViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -506,19 +506,19 @@ namespace Core.Controllers
             var imapModel = user.ImapModel;
             if (imapModel == null)
             {
-                user.ImapModel = new ImapProviderModel()
+                user.ImapModel = new ProviderModel()
                 {
                     login = model.login,
-                    host = model.host,
-                    port = model.port,
+                    ImapHost = model.imaphost,
+                    ImapPort = model.imapport,
                     password = model.password,
                     useSsl = model.useSsl,
                 };
             } else
             {
                 user.ImapModel.login = model.login;
-                user.ImapModel.host = model.host;
-                user.ImapModel.port = model.port;
+                user.ImapModel.ImapHost = model.imaphost;
+                user.ImapModel.ImapPort = model.imapport;
                 user.ImapModel.password = model.password;
                 user.ImapModel.useSsl = model.useSsl;
             }

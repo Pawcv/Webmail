@@ -69,8 +69,8 @@ namespace Core.Controllers
             {
                 model = new ImapClientModel(user.ImapModel.login,
                     user.ImapModel.password,
-                    user.ImapModel.host,
-                    user.ImapModel.port,
+                    user.ImapModel.ImapHost,
+                    user.ImapModel.ImapPort,
                     user.ImapModel.useSsl);
             }
 
@@ -99,8 +99,8 @@ namespace Core.Controllers
             {
                 model = new ImapClientModel(user.ImapModel.login,
                     user.ImapModel.password,
-                    user.ImapModel.host,
-                    user.ImapModel.port,
+                    user.ImapModel.ImapHost,
+                    user.ImapModel.ImapPort,
                     user.ImapModel.useSsl);
             }
 
@@ -174,8 +174,8 @@ namespace Core.Controllers
             {
                 model = new ImapClientModel(user.ImapModel.login,
                     user.ImapModel.password,
-                    user.ImapModel.host,
-                    user.ImapModel.port,
+                    user.ImapModel.ImapHost,
+                    user.ImapModel.ImapPort,
                     user.ImapModel.useSsl);
             }
 
