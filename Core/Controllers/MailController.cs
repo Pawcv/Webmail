@@ -173,8 +173,16 @@ namespace Core.Controllers
             string activeFolder = folderName == null ? "INBOX" : folderName;
 
             MimeKit.MimeMessage message = model.GetMessage(activeFolder, (uint) id);
+            var messageBody = message.HtmlBody == null ? message.TextBody : message.HtmlBody;
 
-            return new JsonResult(message.Body.ToString());
+            var data = new
+            {
+                Subject = message.Subject,
+                From = message.From.ToString(),
+                Body = messageBody
+            };
+
+            return new JsonResult(data);
         }
     }
 }
