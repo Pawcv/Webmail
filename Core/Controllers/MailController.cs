@@ -146,8 +146,14 @@ namespace Core.Controllers
             model.SendMessage();
             model.Disconnect();
 
-
             return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public JsonResult GetMessage(int? id)
+        {
+            // pobranie wiadomości o danym id z aktualnego folderu
+            return new JsonResult("<p>Jakas wiadomosc</p>");
         }
     }
 }

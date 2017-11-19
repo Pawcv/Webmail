@@ -7,6 +7,47 @@
     <link rel="Stylesheet" href="@Href("~/css/styles.css")" />
 }
 
+@section Scripts {
+    <script>
+        function CloseMessage() {
+            $("#messageContent").hide();
+            $("#mailsContent").show();
+        }
+
+        function GetMessage(id) {
+            $.ajax({
+                type: 'GET',
+                url: '/Mail/GetMessage?' + id,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    $("#messageContent").show();
+                    $("#mailsContent").hide();
+                    $("#messageBody").html(data);
+                },
+                failure: function (data) {
+                    console.log("Failure");
+                    console.log(data);
+                },
+                error: function (data) {
+                    console.log("Error");
+                    console.log(data);
+                }
+            });
+        };
+
+        function AddActionToHeaders() {
+            var buttons = $("#mailsContent").find('a');
+            $.each(buttons, function (index, value) {
+                $(value).click(function () {
+                    GetMessage(index);
+                });
+            });
+
+        };
+        AddActionToHeaders();
+    </script>
+}
+
 @model Core.Models.ImapClientModel
 
 <div>
@@ -33,6 +74,11 @@
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);
                 }
             </div>
+            <div id="messageContent" class="content">
+                <a href="#" onclick="CloseMessage()" id="cancel" name="cancel" class="btn btn-default">Close message</a>
+                <div id="messageBody"></div>
+            </div>
         </div>
+
     </div>
 </div>

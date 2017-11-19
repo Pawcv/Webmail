@@ -1,8 +1,7 @@
 ﻿
-
 <div class="list-group">
     @foreach (var summary in Model.Headers)
     {
-        <a href="#" class="list-group-item">@summary.UniqueId - @summary.Envelope.Subject (@summary.Envelope.From)</a>
+        <a href="#" id="@summary.UniqueId" class="list-group-item">@summary.UniqueId - @summary.Envelope.Subject (@summary.Envelope.From)</a>
     }
 </div>
