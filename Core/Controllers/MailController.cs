@@ -150,10 +150,31 @@ namespace Core.Controllers
         }
 
         [HttpGet]
-        public JsonResult GetMessage(int? id)
+        public async Task<JsonResult> GetMessage(string folderName, int id)
         {
-            // pobranie wiadomości o danym id z aktualnego folderu
-            return new JsonResult("<p>Jakas wiadomosc</p>");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            {
+                model = new ImapClientModel(user.ImapModel.login,
+                    user.ImapModel.password,
+                    user.ImapModel.host,
+                    user.ImapModel.port,
+                    user.ImapModel.useSsl);
+            }
+
+            string activeFolder = folderName == null ? "INBOX" : folderName;
+
+            MimeKit.MimeMessage message = model.GetMessage(activeFolder, (uint) id);
+
+            return new JsonResult(message.Body.ToString());
         }
     }
 }

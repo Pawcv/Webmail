@@ -12,23 +12,33 @@
         function CloseMessage() {
             $("#messageContent").hide();
             $("#mailsContent").show();
+            $('messageSpinner').hide();
         }
 
         function GetMessage(id) {
+            $("#messageSpinner").show();
+            $("#mailsContent").hide();
+
+            $("#messageSpinner").addClass("loader");
+            $("#messageSpinner").show();
+
             $.ajax({
                 type: 'GET',
-                url: '/Mail/GetMessage?' + id,
+                url: '/Mail/GetMessage?id=' + id,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
                     $("#messageContent").show();
                     $("#mailsContent").hide();
+                    $("#messageSpinner").hide();
                     $("#messageBody").html(data);
                 },
                 failure: function (data) {
+                    CloseMessage();
                     console.log("Failure");
                     console.log(data);
                 },
                 error: function (data) {
+                    CloseMessage();
                     console.log("Error");
                     console.log(data);
                 }
@@ -39,7 +49,7 @@
             var buttons = $("#mailsContent").find('a');
             $.each(buttons, function (index, value) {
                 $(value).click(function () {
-                    GetMessage(index);
+                    GetMessage(index + 1);
                 });
             });
 
@@ -74,6 +84,7 @@
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);
                 }
             </div>
+            <div id="messageSpinner"></div>
             <div id="messageContent" class="content">
                 <a href="#" onclick="CloseMessage()" id="cancel" name="cancel" class="btn btn-default">Close message</a>
                 <div id="messageBody"></div>
