@@ -259,13 +259,16 @@ namespace Core.Controllers
 
             var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
-            if (ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            if (user.ImapModel != null)
             {
-                if (model.IsConnected)
+                if (ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
                 {
-                    model.Disconnect();
+                    if (model.IsConnected)
+                    {
+                        model.Disconnect();
+                    }
+                    model.Dispose();
                 }
-                model.Dispose();
             }
 
             await _signInManager.SignOutAsync();
