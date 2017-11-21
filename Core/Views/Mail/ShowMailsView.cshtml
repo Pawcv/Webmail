@@ -57,7 +57,7 @@
             var buttons = $("#mailsContent").find('a');
             $.each(buttons, function (index, value) {
                 $(value).click(function () {
-                    GetMessage("@Model.ActiveFolder", index + 1);
+                    GetMessage("@Model.ActiveFolder", value.id);
                 });
             });
 
