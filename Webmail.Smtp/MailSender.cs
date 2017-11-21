@@ -29,6 +29,15 @@ namespace Webmail.Smtp
             this.SecurityOptions = securityOptions;
         }
 
+        public MailSender(SmtpConfiguration configuration)
+        {
+            // TODO check params
+            this.Credentials = new NetworkCredential(configuration.Username, configuration.Password);
+            this.Host = configuration.Host;
+            this.Port = configuration.Port;
+            this.SecurityOptions = configuration.SecureSocketOptions;
+        }
+
         public async Task SendMailAsync(MimeMessage message, ITransferProgress progressHandler = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             using (var client = await GetAuthenticatedClientAsync(cancellationToken))
