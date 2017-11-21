@@ -78,6 +78,10 @@ namespace Core.Controllers
                 model.Connect();
                 model.ActiveFolder = "INBOX";
             }
+            else
+            {
+                model.Refresh();
+            }
             return View("ShowMailsView", model);
         }
 
@@ -182,7 +186,7 @@ namespace Core.Controllers
                     user.ImapModel.useSsl);
             }
 
-            model.Receive();
+            model.Refresh();
 
             return View("ShowMailsView", model);
         }

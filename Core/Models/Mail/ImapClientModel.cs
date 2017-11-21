@@ -106,8 +106,13 @@ namespace Core.Models
             return _messages[key];
         }
 
-        public void Receive()
+        public void Refresh()
         {
+            _downloadFolders();
+            if (!Folders.Exists(f => f.FullName.Equals(ActiveFolder)))
+            {
+                ActiveFolder = "INBOX";
+            }
             _downloadHeaders();
         }
 
@@ -122,15 +127,16 @@ namespace Core.Models
 
         private void _downloadFolders()
         {
+            _folders.Clear();
             var root = _client.GetFolder(_client.PersonalNamespaces[0]);
             _downloadFoldersRecursively(root);
         }
 
         private void _downloadFoldersRecursively(IMailFolder folder)
         {
-            if (!folder.FullName.Equals(""))
+            if (!folder.FullName.Equals("") && folder.Exists)
             {
-                Folders.Add(folder);
+                _folders.Add(folder);
             }
             foreach (var subfolder in folder.GetSubfolders())
             {
