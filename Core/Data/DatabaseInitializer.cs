@@ -3,11 +3,19 @@ using Microsoft.AspNetCore.Identity;
 using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using Webmail.Smtp;
+using NLog;
 
 namespace Core.Data
 {
     public class DatabaseInitializer
     {
+        private const string TestAdminEmail = "admin@admin.com";
+        private const string TestAdminPass = "Admin1!";
+
+        private static ILogger logger = LogManager.GetCurrentClassLogger();
+
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -21,33 +29,81 @@ namespace Core.Data
         {
             _dbContext.Database.Migrate();
 
-            this.AddTestAdmin().Wait();
+            this.AddTestAdminAsync().Wait();
+            this.SeedAsync().Wait();
         }
 
-        private async Task AddTestAdmin()
+        private async Task AddTestAdminAsync()
         {
             try
             {
-                var testAdminEmail = "admin@admin.com";
-                var testAdmin = await this._userManager.FindByNameAsync(testAdminEmail);
+                var testAdmin = await this._userManager.FindByNameAsync(TestAdminEmail);
 
                 if (testAdmin == null)
                 {
-                    var user = new ApplicationUser { UserName = testAdminEmail, Email = testAdminEmail, EmailConfirmed = true };
+                    var user = new ApplicationUser { UserName = TestAdminEmail, Email = TestAdminEmail, EmailConfirmed = true };
 
-                    var userResult = await this._userManager.CreateAsync(user, "Admin1!");
+                    var userResult = await this._userManager.CreateAsync(user, TestAdminPass);
 
                     if (!userResult.Succeeded)
                     {
                         throw new InvalidOperationException("Failed to add first admin!");
                     }
-                }
 
-                Console.WriteLine($"Test admin succesffully added!");
+                    logger.Info($"TestAdmin succesffully added!");
+                }
+                else
+                {
+                    logger.Info($"TestAdmin already exists in DB.");
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Adding test admin failed! Reason: {e}");
+                logger.Warn($"Adding TestAdmin failed! Reason: {e}");
+            }
+        }
+
+        /// <summary>
+        /// Seeding database with some test data. Feel free to add something more.
+        /// </summary>
+        private async Task SeedAsync()
+        {
+            try
+            {
+                var isSeeded = await this._dbContext.SmtpConfigurations.AnyAsync();
+                if (isSeeded)
+                {
+                    return;
+                }
+
+                var testAdmin = await this._dbContext.Users.SingleOrDefaultAsync(user => user.Email == TestAdminEmail);
+                if (testAdmin == null)
+                {
+                    logger.Warn("TestAdmin not in database, won't seed SmtpConf for him.");
+                    return;
+                }
+
+                var smtpConfigurations = new List<SmtpConfiguration>
+                {
+                    new SmtpConfiguration {
+                        Username ="asdf-67@wp.pl",
+                        Password = "asdF123$",
+                        Host = "smtp.wp.pl",
+                        Port = 465,
+                        SecureSocketOptions = MailKit.Security.SecureSocketOptions.Auto
+                    }
+                };
+
+                foreach (var smtpConfiguration in smtpConfigurations)
+                {
+                    testAdmin.SmtpConfigurations.Add(smtpConfiguration);
+                }
+
+                await this._dbContext.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                logger.Warn($"Seeding database failed! Reason: {e}");
             }
         }
     }
