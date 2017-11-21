@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -13,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Webmail.Smtp;
 using MimeKit;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -109,16 +108,6 @@ namespace Core.Controllers
             return View("ShowMailsView", model);
         }
 
-        [HttpPost]
-        public IActionResult SendMail(string login, string password, string message)
-        {
-            var mailSender = new MailSenderModel(login, password);
-            mailSender.Connect();
-            mailSender.SendMessage(message);
-            mailSender.Disconnect();
-            return RedirectToAction("Index");
-        }
-
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
@@ -151,10 +140,24 @@ namespace Core.Controllers
 
             var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
-            model.Connect(user);
-            model.SendMessage(user);
-            model.Disconnect();
+            var securityOptions = MailKit.Security.SecureSocketOptions.Auto;
+            if (user.ImapModel.useSsl)
+            {
+                securityOptions = MailKit.Security.SecureSocketOptions.SslOnConnect;
+            }
+            var sender = new MailSender(new NetworkCredential(user.ImapModel.login, user.ImapModel.password), user.ImapModel.SmtpHost, user.ImapModel.SmtpPort, securityOptions);
 
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(user.UserName, user.ImapModel.login));
+            message.To.Add(new MailboxAddress(model.Recipent, model.Recipent));
+            message.Subject = model.Title;
+
+            message.Body = new TextPart("html")
+            {
+                Text = model.Content
+            };
+
+            await sender.SendMailAsync(message);
             return RedirectToAction("Index");
         }
 

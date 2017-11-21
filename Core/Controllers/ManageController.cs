@@ -511,6 +511,8 @@ namespace Core.Controllers
                     login = model.login,
                     ImapHost = model.imaphost,
                     ImapPort = model.imapport,
+                    SmtpHost = model.smtphost,
+                    SmtpPort = model.smtpport,
                     password = model.password,
                     useSsl = model.useSsl,
                 };
@@ -519,6 +521,8 @@ namespace Core.Controllers
                 user.ImapModel.login = model.login;
                 user.ImapModel.ImapHost = model.imaphost;
                 user.ImapModel.ImapPort = model.imapport;
+                user.ImapModel.SmtpHost = model.smtphost;
+                user.ImapModel.SmtpPort = model.smtpport;
                 user.ImapModel.password = model.password;
                 user.ImapModel.useSsl = model.useSsl;
             }

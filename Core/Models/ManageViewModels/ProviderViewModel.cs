@@ -27,5 +27,12 @@ namespace Core.Models.ManageViewModels
 
         [Display(Name = "Use SSL")]
         public bool useSsl { get; set; }
+        
+        public ProviderViewModel()
+        {
+            imapport = 993;
+            smtpport = 465;
+        }
+
     }
 }
