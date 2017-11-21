@@ -26,8 +26,10 @@ namespace Core
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING") ?? Configuration.GetConnectionString("DefaultConnection");
+
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(connectionString));
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -36,11 +38,13 @@ namespace Core
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
 
+            services.AddTransient<DatabaseInitializer>();
+
             services.AddMvc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, DatabaseInitializer databaseInitializer)
         {
             if (env.IsDevelopment())
             {
@@ -63,6 +67,8 @@ namespace Core
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            databaseInitializer.Initialize();
         }
     }
 }
