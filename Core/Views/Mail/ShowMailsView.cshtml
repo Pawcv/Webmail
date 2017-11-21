@@ -70,8 +70,11 @@
 
 <div>
     <div id="actionsRow">
-        <form asp-action="CreateMail" method="get" id="createMail">
+        <form asp-action="CreateMail" method="get" id="createMail" style="float:left">
             <input class="button" type="submit" value="Create new">
+        </form>
+        <form asp-action="ReceiveMail" method="get" id="receiveMail" style="float:left">
+            <input class="button" type="submit" value="Receive">
         </form>
     </div>
 

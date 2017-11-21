@@ -106,6 +106,11 @@ namespace Core.Models
             return _messages[key];
         }
 
+        public void Receive()
+        {
+            _downloadHeaders();
+        }
+
         private void _downloadMessage(string folderName, UniqueId uid)
         {
             var folder = _client.GetFolder(folderName);

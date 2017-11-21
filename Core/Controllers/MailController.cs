@@ -162,6 +162,32 @@ namespace Core.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ReceiveMail()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            {
+                model = new ImapClientModel(user.ImapModel.login,
+                    user.ImapModel.password,
+                    user.ImapModel.ImapHost,
+                    user.ImapModel.ImapPort,
+                    user.ImapModel.useSsl);
+            }
+
+            model.Receive();
+
+            return View("ShowMailsView", model);
+        }
+
+        [HttpGet]
         public async Task<JsonResult> GetMessage(string folderName, int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
