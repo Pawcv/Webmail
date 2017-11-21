@@ -1,0 +1,57 @@
+﻿@model ProviderViewModel
+@{
+    ViewData["Title"] = "Profile";
+    //ViewData.AddActivePage(ManageNavPages.SelectImapProvider);
+}
+
+<h4>@ViewData["Title"]</h4>
+<div class="row">
+    <div class="col-md-6">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="login"></label>
+                <input asp-for="login" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <label asp-for="password"></label>
+                
+                <div class="input-group">
+                    <input asp-for="password" class="form-control" />
+                    <span class="input-group-addon" aria-hidden="true"><span class="glyphicon glyphicon-ok text-success"></span></span>
+                </div>
+                <span asp-validation-for="password" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="imaphost"></label>
+                <input asp-for="imaphost" class="form-control" />
+                <span asp-validation-for="imaphost" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="imapport"></label>
+                <input asp-for="imapport" class="form-control" />
+                <span asp-validation-for="imapport" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="smtphost"></label>
+                <input asp-for="smtphost" class="form-control" />
+                <span asp-validation-for="smtphost" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="smtpport"></label>
+                <input asp-for="smtpport" class="form-control" />
+                <span asp-validation-for="smtpport" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="useSsl"></label>
+                <input asp-for="useSsl" class="form-control" />
+                <span asp-validation-for="useSsl" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-default">Save</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

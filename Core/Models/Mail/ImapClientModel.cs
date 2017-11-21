@@ -3,14 +3,17 @@
 using MailKit.Net.Imap;
 using MailKit;
 using System;
+using System.Collections.Concurrent;
 
 namespace Core.Models
 {
     public class ImapClientModel : IDisposable
     {
+        public static ConcurrentDictionary<string, ImapClientModel> ImapClientModelsDictionary = new ConcurrentDictionary<string, ImapClientModel>();
+
         public string ActiveFolder
         {
-            get { return _activeFolder; }
+            get => _activeFolder;
             set
             {
                 if (value != _activeFolder)
@@ -48,18 +51,19 @@ namespace Core.Models
             }
         }
 
+        public bool IsConnected => _client.IsConnected;
+
         private readonly string _login;
         private readonly string _password;
         private readonly string _host;
         private readonly int _port;
         private readonly bool _useSsl;
 
-        private ImapClient _client;
+        private readonly ImapClient _client;
         private string _activeFolder;
         private List<IMailFolder> _folders;
         private IList<IMessageSummary> _headers;
         private Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage> _messages;
-        private bool _connected;
         private bool _disposed;
 
         public ImapClientModel(string login, string password, string host, int port, bool useSsl)
@@ -69,9 +73,9 @@ namespace Core.Models
             _host = host;
             _port = port;
             _useSsl = useSsl;
-            _connected = false;
             _messages = new Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage>();
             _client = new ImapClient();
+            ImapClientModelsDictionary.TryAdd(_login+_password, this);
         }
 
         public void Connect()
@@ -80,13 +84,11 @@ namespace Core.Models
             _client.Connect(_host, _port, _useSsl);
             _client.AuthenticationMechanisms.Remove("XOAUTH2");
             _client.Authenticate(_login, _password);
-            _connected = true;
         }
 
         public void Disconnect()
         {
             _client.Disconnect(true);
-            _connected = false;
         }
 
         public MimeKit.MimeMessage GetMessage(string folderName, uint uid)
@@ -121,8 +123,11 @@ namespace Core.Models
 
         private void _downloadFoldersRecursively(IMailFolder folder)
         {
-            _folders.Add(folder);
-            foreach (var subfolder in folder.GetSubfolders(false))
+            if (!folder.FullName.Equals(""))
+            {
+                Folders.Add(folder);
+            }
+            foreach (var subfolder in folder.GetSubfolders())
             {
                 _downloadFoldersRecursively(subfolder);
             }
@@ -150,6 +155,7 @@ namespace Core.Models
                 {
                     _client.Dispose();
                 }
+                ImapClientModelsDictionary.TryRemove(_login + _password, out var _);
                 _disposed = true;
             }
         }

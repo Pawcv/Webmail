@@ -34,5 +34,9 @@ namespace Core.Views.Manage
         }
 
         public static void AddActivePage(this ViewDataDictionary viewData, string activePage) => viewData[ActivePageKey] = activePage;
+
+        public static string SelectImapProvider => "SelectImapProvider";
+
+        public static string SelectImapProviderNavClass(ViewContext viewContext) => PageNavClass(viewContext, SelectImapProvider);
     }
 }

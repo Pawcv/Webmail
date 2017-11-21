@@ -11,9 +11,10 @@ using System;
 namespace Core.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20171114192656_ImapProvider")]
+    partial class ImapProvider
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,22 +76,21 @@ namespace Core.Data.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
-            modelBuilder.Entity("Core.Models.ProviderModel", b =>
+            modelBuilder.Entity("Core.Models.ImapProviderModel", b =>
                 {
                     b.Property<Guid>("_id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ImapHost");
+                    b.Property<string>("host")
+                        .IsRequired();
 
-                    b.Property<int>("ImapPort");
+                    b.Property<string>("login")
+                        .IsRequired();
 
-                    b.Property<string>("SmtpHost");
+                    b.Property<string>("password")
+                        .IsRequired();
 
-                    b.Property<int>("SmtpPort");
-
-                    b.Property<string>("login");
-
-                    b.Property<string>("password");
+                    b.Property<int>("port");
 
                     b.Property<bool>("useSsl");
 
@@ -209,7 +209,7 @@ namespace Core.Data.Migrations
 
             modelBuilder.Entity("Core.Models.ApplicationUser", b =>
                 {
-                    b.HasOne("Core.Models.ProviderModel", "ImapModel")
+                    b.HasOne("Core.Models.ImapProviderModel", "ImapModel")
                         .WithMany()
                         .HasForeignKey("ImapModel_id");
                 });
