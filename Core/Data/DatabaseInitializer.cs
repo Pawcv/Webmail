@@ -2,33 +2,22 @@
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Core.Data
 {
     public class DatabaseInitializer
     {
-        private UserManager<ApplicationUser> userManager;
+        private readonly ApplicationDbContext _dbContext;
 
-        public DatabaseInitializer(UserManager<ApplicationUser> userManager)
+        public DatabaseInitializer(ApplicationDbContext dbContext)
         {
-            this.userManager = userManager;
+            _dbContext = dbContext;
         }
 
-        public async Task Initialize()
+        public void Initialize()
         {
-            var testAdmin = await this.userManager.FindByNameAsync("admin@admin.com");
-
-            if (testAdmin == null)
-            {
-                var user = new ApplicationUser { UserName = "admin@admin.com", Email = "admin@admin.com", EmailConfirmed = true };
-
-                var userResult = await this.userManager.CreateAsync(user, "Admin1!");
-
-                if (!userResult.Succeeded)
-                {
-                    throw new InvalidOperationException("Failed to build user and roles");
-                }
-            }
+            _dbContext.Database.Migrate();
         }
     }
 }
