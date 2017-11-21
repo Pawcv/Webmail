@@ -1,5 +1,7 @@
 ﻿
 <div class="list-group">
+    <h3><span id="activeFolder" class="label label-default">@Model.ActiveFolder </span></h3>
+
     @foreach (var summary in Model.Headers)
     {
         <a href="#" id="@summary.UniqueId" class="list-group-item">@summary.UniqueId - @summary.Envelope.Subject (@summary.Envelope.From)</a>

@@ -13,6 +13,9 @@ using Microsoft.Extensions.Options;
 using Core.Models;
 using Core.Models.ManageViewModels;
 using Core.Services;
+using Core.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Core.Controllers
 {
@@ -25,6 +28,7 @@ namespace Core.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
+        private readonly ApplicationDbContext _dbContext;
 
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
@@ -33,13 +37,15 @@ namespace Core.Controllers
           SignInManager<ApplicationUser> signInManager,
           IEmailSender emailSender,
           ILogger<ManageController> logger,
-          UrlEncoder urlEncoder)
+          UrlEncoder urlEncoder,
+          ApplicationDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _logger = logger;
             _urlEncoder = urlEncoder;
+            _dbContext = dbContext;
         }
 
         [TempData]
@@ -464,6 +470,80 @@ namespace Core.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> SelectImapProvider()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            var model = new ProviderViewModel();
+            if (user.ImapModel != null)
+            { 
+                model.imaphost = user.ImapModel.ImapHost;
+                model.login = user.ImapModel.login;
+                model.password = user.ImapModel.password;
+                model.imapport = user.ImapModel.ImapPort;
+                model.smtphost = user.ImapModel.SmtpHost;
+                model.smtpport = user.ImapModel.SmtpPort;
+                model.useSsl = user.ImapModel.useSsl;
+            }
+
+            return View(model);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SelectImapProvider(ProviderViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            var imapModel = user.ImapModel;
+            if (imapModel == null)
+            {
+                user.ImapModel = new ProviderModel()
+                {
+                    login = model.login,
+                    ImapHost = model.imaphost,
+                    ImapPort = model.imapport,
+                    SmtpHost = model.smtphost,
+                    SmtpPort = model.smtpport,
+                    password = model.password,
+                    useSsl = model.useSsl,
+                };
+            } else
+            {
+                user.ImapModel.login = model.login;
+                user.ImapModel.ImapHost = model.imaphost;
+                user.ImapModel.ImapPort = model.imapport;
+                user.ImapModel.SmtpHost = model.smtphost;
+                user.ImapModel.SmtpPort = model.smtpport;
+                user.ImapModel.password = model.password;
+                user.ImapModel.useSsl = model.useSsl;
+            }
+            await _userManager.UpdateAsync(user);
+            
+            StatusMessage = "Your imap provider has been updated";
+            return RedirectToAction(nameof(Index));
+        }
         #region Helpers
 
         private void AddErrors(IdentityResult result)

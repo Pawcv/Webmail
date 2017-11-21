@@ -12,23 +12,41 @@
         function CloseMessage() {
             $("#messageContent").hide();
             $("#mailsContent").show();
+            $('messageSpinner').hide();
         }
 
-        function GetMessage(id) {
+        function ShowMessage(data) {
+            console.log(data);
+            $("#messageContent").show();
+            $("#mailsContent").hide();
+            $("#messageSpinner").hide();
+
+            $("#messageSubject").text(data.subject)
+            $("#messageFrom").text(data.from)
+            $("#messageBody").html(data.body);
+        }
+
+        function GetMessage(folderName,id) {
+            $("#messageSpinner").show();
+            $("#mailsContent").hide();
+
+            $("#messageSpinner").addClass("loader");
+            $("#messageSpinner").show();
+
             $.ajax({
                 type: 'GET',
-                url: '/Mail/GetMessage?' + id,
+                url: '/Mail/GetMessage?id=' + id + '&folderName=' + folderName,
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
-                    $("#messageContent").show();
-                    $("#mailsContent").hide();
-                    $("#messageBody").html(data);
+                    ShowMessage(data);
                 },
                 failure: function (data) {
+                    CloseMessage();
                     console.log("Failure");
                     console.log(data);
                 },
                 error: function (data) {
+                    CloseMessage();
                     console.log("Error");
                     console.log(data);
                 }
@@ -39,7 +57,7 @@
             var buttons = $("#mailsContent").find('a');
             $.each(buttons, function (index, value) {
                 $(value).click(function () {
-                    GetMessage(index);
+                    GetMessage("@Model.ActiveFolder", index + 1);
                 });
             });
 
@@ -69,14 +87,20 @@
 
         <div id="mailsColumn">
             <div id="mailsContent" class="content">
-                <p>Nagłówki maili z wybranego folderu</p>
                 @{
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);
                 }
             </div>
+            <div id="messageSpinner"></div>
             <div id="messageContent" class="content">
                 <a href="#" onclick="CloseMessage()" id="cancel" name="cancel" class="btn btn-default">Close message</a>
-                <div id="messageBody"></div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 id="messageFrom" class="panel-heading"></h4>
+                        <h4 id="messageSubject" class=""></h4>
+                    </div>
+                    <div id="messageBody" class="panel-body"></div>
+                </div>
             </div>
         </div>
 

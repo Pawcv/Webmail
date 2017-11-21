@@ -1,15 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Net;
 using System.Security.Claims;
+using Core.Data;
 using Core.Models;
 using Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Webmail.Smtp;
 using MimeKit;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -24,35 +26,86 @@ namespace Core.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
+        private readonly ApplicationDbContext _dbContext;
 
         public MailController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            ApplicationDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _logger = logger;
+            _dbContext = dbContext;
         }
 
         // GET: /<controller>/
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var id = User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var user = _userManager.FindByIdAsync(id).Result;
-            return View();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            if (user.ImapModel == null)
+            {
+                return RedirectToAction("SelectImapProvider", "Manage");
+            }
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            {
+                model = new ImapClientModel(user.ImapModel.login,
+                    user.ImapModel.password,
+                    user.ImapModel.ImapHost,
+                    user.ImapModel.ImapPort,
+                    user.ImapModel.useSsl);
+            }
+
+            if (!model.IsConnected)
+            {
+                model.Connect();
+                model.ActiveFolder = "INBOX";
+            }
+            return View("ShowMailsView", model);
         }
 
-        [HttpPost]
-        public IActionResult SendMail(string login, string password, string message)
+        public async Task<IActionResult> ChangeActiveFolder(string folderName)
         {
-            var mailSender = new MailSenderModel(login, password);
-            mailSender.Connect();
-            mailSender.SendMessage(message);
-            mailSender.Disconnect();
-            return RedirectToAction("Index");
+            folderName = WebUtility.UrlDecode(folderName);
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            {
+                model = new ImapClientModel(user.ImapModel.login,
+                    user.ImapModel.password,
+                    user.ImapModel.ImapHost,
+                    user.ImapModel.ImapPort,
+                    user.ImapModel.useSsl);
+            }
+
+            model.ActiveFolder = folderName;
+
+            return View("ShowMailsView", model);
         }
 
         public IActionResult Error()
@@ -76,20 +129,72 @@ namespace Core.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateMail(MailMessageModel model)
+        public async Task<IActionResult> CreateMail(MailMessageModel model)
         {
-            model.Connect();
-            model.SendMessage();
-            model.Disconnect();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            var securityOptions = MailKit.Security.SecureSocketOptions.Auto;
+            if (user.ImapModel.useSsl)
+            {
+                securityOptions = MailKit.Security.SecureSocketOptions.SslOnConnect;
+            }
+            var sender = new MailSender(new NetworkCredential(user.ImapModel.login, user.ImapModel.password), user.ImapModel.SmtpHost, user.ImapModel.SmtpPort, securityOptions);
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(user.UserName, user.ImapModel.login));
+            message.To.Add(new MailboxAddress(model.Recipent, model.Recipent));
+            message.Subject = model.Title;
+
+            message.Body = new TextPart("html")
+            {
+                Text = model.Content
+            };
+
+            await sender.SendMailAsync(message);
             return RedirectToAction("Index");
         }
 
         [HttpGet]
-        public JsonResult GetMessage(int? id)
+        public async Task<JsonResult> GetMessage(string folderName, int id)
         {
-            // pobranie wiadomości o danym id z aktualnego folderu
-            return new JsonResult("<p>Jakas wiadomosc</p>");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            {
+                model = new ImapClientModel(user.ImapModel.login,
+                    user.ImapModel.password,
+                    user.ImapModel.ImapHost,
+                    user.ImapModel.ImapPort,
+                    user.ImapModel.useSsl);
+            }
+
+            string activeFolder = folderName == null ? "INBOX" : folderName;
+
+            MimeKit.MimeMessage message = model.GetMessage(activeFolder, (uint) id);
+            var messageBody = message.HtmlBody == null ? message.TextBody : message.HtmlBody;
+
+            var data = new
+            {
+                Subject = message.Subject,
+                From = message.From.ToString(),
+                Body = messageBody
+            };
+
+            return new JsonResult(data);
         }
     }
 }
