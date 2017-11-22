@@ -235,6 +235,8 @@ namespace Core.Controllers
                     user.ImapModel.useSsl);
             }
 
+            folderName = WebUtility.UrlDecode(folderName);
+
             string activeFolder = folderName == null ? "INBOX" : folderName;
 
             MimeKit.MimeMessage message = model.GetMessage(activeFolder, (uint)id);

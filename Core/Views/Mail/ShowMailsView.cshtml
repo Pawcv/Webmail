@@ -101,7 +101,7 @@
             var buttons = $("#headersContent").find('a');
             $.each(buttons, function (index, value) {
                 $(value).click(function () {
-                    GetMessage("@Model.ActiveFolder", value.id);
+                    GetMessage("@System.Net.WebUtility.UrlEncode(@Model.ActiveFolder)", value.id);
                 });
             });
         };
