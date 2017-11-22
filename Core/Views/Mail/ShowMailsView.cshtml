@@ -86,6 +86,10 @@
         </div>
 
         <div id="mailsColumn">
+            <form asp-action="SearchCurrentFolder" method="get" id="searchCurrentFolder">
+                <input type="text" id="search_phrase" name="search_phrase">
+                <input class="search_button" type="submit" value="Search current folder">
+            </form>
             <div id="mailsContent" class="content">
                 @{
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);
