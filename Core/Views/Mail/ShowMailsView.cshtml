@@ -53,19 +53,13 @@
             });
         }
 
-        // reloads headers
-        function refreshHeaders() {
-             var url = '@Url.Action("ReceiveMail", "Mail")';
-             ajaxCallRefresh(url);
-        }
-
         function refreshHeadersPeriodically() {
             var url = '@Url.Action("PeriodicallyRefreshMail", "Mail")';
             ajaxCallRefresh(url);
         }
 
-        // call refresh after 60secs
-        window.setInterval(refreshHeadersPeriodically, 60000);
+        // call refresh after 10secs
+        window.setInterval(refreshHeadersPeriodically, 10000);
 
 
         // show spinner and after getting message from server shows it
@@ -115,7 +109,9 @@
         <form asp-action="CreateMail" method="get" id="createMail" style="float:left">
             <input class="button" type="submit" value="Create new">
         </form>
-        <input class="button" type="button" value="Receive" onclick="refreshHeaders();"/>
+        <form asp-action="ReceiveMail" method="get" id="receiveMail" style="float:left">
+            <input class="button" type="submit" value="Receive">
+        </form>
     </div>
 
     <div id="mailsDiv">

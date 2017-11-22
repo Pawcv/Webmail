@@ -185,7 +185,7 @@ namespace Core.Controllers
 
             model.Refresh();
 
-            return PartialView("HeadersPartialView", model);
+            return View("ShowMailsView", model);
         }
 
         [HttpGet]
