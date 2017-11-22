@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Core.Data;
 using Core.Models;
 using Core.Services;
+using System.Diagnostics;
 
 namespace Core
 {
@@ -68,7 +69,10 @@ namespace Core
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            databaseInitializer.Initialize();
+            if (Debugger.IsAttached)
+            {
+                databaseInitializer.Initialize();
+            }
         }
     }
 }
