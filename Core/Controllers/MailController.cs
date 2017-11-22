@@ -78,10 +78,7 @@ namespace Core.Controllers
                 model.Connect();
                 model.ActiveFolder = "INBOX";
             }
-            else
-            {
-                model.Refresh();
-            }
+
             return View("ShowMailsView", model);
         }
 
@@ -214,7 +211,7 @@ namespace Core.Controllers
 
             string activeFolder = folderName == null ? "INBOX" : folderName;
 
-            MimeKit.MimeMessage message = model.GetMessage(activeFolder, (uint) id);
+            MimeKit.MimeMessage message = model.GetMessage(activeFolder, (uint)id);
             var messageBody = message.HtmlBody == null ? message.TextBody : message.HtmlBody;
 
             var data = new

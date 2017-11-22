@@ -12,19 +12,7 @@ namespace Core.Models
     {
         public static ConcurrentDictionary<string, ImapClientModel> ImapClientModelsDictionary = new ConcurrentDictionary<string, ImapClientModel>();
 
-        public string ActiveFolder
-        {
-            get => _activeFolder;
-            set
-            {
-                if (value != _activeFolder)
-                {
-                    // active folder changed, so list of headers must be downloaded for a new folder
-                    _headers = null;
-                }
-                _activeFolder = value;
-            }
-        }
+        public string ActiveFolder { get; set; }
 
         public List<IMailFolder> Folders
         {
@@ -44,11 +32,16 @@ namespace Core.Models
         {
             get
             {
-                if (_headers == null)
+                if (ActiveFolder == null)
                 {
-                    _downloadHeaders();
+                    return null;
                 }
-                return _headers;
+
+                if (!_headers.ContainsKey(ActiveFolder))
+                {
+                    _downloadHeaders(ActiveFolder);
+                }
+                return _headers[ActiveFolder];
             }
         }
 
@@ -61,10 +54,10 @@ namespace Core.Models
         private readonly bool _useSsl;
 
         private readonly ImapClient _client;
-        private string _activeFolder;
         private List<IMailFolder> _folders;
-        private IList<IMessageSummary> _headers;
+        private ConcurrentDictionary<string, IList<IMessageSummary>> _headers; //key: folder name
         private Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage> _messages;
+        private ImapClient _idleClient;
         private Thread _idleThread;
         private CancellationTokenSource _idleThreadDone;
         private bool _disposed;
@@ -76,8 +69,10 @@ namespace Core.Models
             _host = host;
             _port = port;
             _useSsl = useSsl;
+            _headers = new ConcurrentDictionary<string, IList<IMessageSummary>>();
             _messages = new Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage>();
             _client = new ImapClient();
+            _idleClient = new ImapClient();
             ImapClientModelsDictionary.TryAdd(_login + _password, this);
         }
 
@@ -87,6 +82,15 @@ namespace Core.Models
             _client.Connect(_host, _port, _useSsl);
             _client.AuthenticationMechanisms.Remove("XOAUTH2");
             _client.Authenticate(_login, _password);
+
+            _idleClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
+            _idleClient.Connect(_host, _port, _useSsl);
+            _idleClient.AuthenticationMechanisms.Remove("XOAUTH2");
+            _idleClient.Authenticate(_login, _password);
+
+            //TODO subscribe all folders
+            _subscribeFolder("INBOX");
+            _startIdleThread();
         }
 
         public void Disconnect()
@@ -116,7 +120,7 @@ namespace Core.Models
             {
                 ActiveFolder = "INBOX";
             }
-            _downloadHeaders();
+            _downloadHeaders(ActiveFolder);
         }
 
         private void _downloadMessage(string folderName, UniqueId uid)
@@ -146,44 +150,58 @@ namespace Core.Models
                 _downloadFoldersRecursively(subfolder);
             }
         }
-        private void _downloadHeaders()
+
+        private void _downloadHeaders(string folderName)
         {
-            var folder = _client.GetFolder(ActiveFolder);
+            var folder = _client.GetFolder(folderName);
             folder.Open(FolderAccess.ReadOnly);
-            _headers = folder.Fetch(0, -1, MessageSummaryItems.Full | MessageSummaryItems.UniqueId);
+            _headers[folderName] = folder.Fetch(0, -1, MessageSummaryItems.Full | MessageSummaryItems.UniqueId);
             folder.Close();
         }
 
-        public void _subscribeFolder(IMailFolder folder)
+        private void _subscribeAllFolders()
         {
+            foreach (var folder in Folders)
+            {
+                _subscribeFolder(folder.FullName);
+            }
+        }
+
+        private void _subscribeFolder(string folderName)
+        {
+            var folder = _idleClient.GetFolder(folderName);
             folder.Open(FolderAccess.ReadOnly);
 
             folder.MessageExpunged += (sender, e) =>
             {
-
+                //TODO remove message from dictionary
+                _downloadHeaders(((ImapFolder)sender).FullName);
             };
             folder.CountChanged += (sender, e) =>
             {
-
+                _downloadHeaders(((ImapFolder)sender).FullName);
             };
         }
 
-        public void _startIdleThread()
+        private void _startIdleThread()
         {
             _idleThreadDone = new CancellationTokenSource();
-            _idleThread = new Thread(IdleLoop);
-            _idleThread.Start(new IdleState(_client, _idleThreadDone.Token));
+            _idleThread = new Thread(_idleLoop);
+            _idleThread.Start(new IdleState(_idleClient, _idleThreadDone.Token));
         }
 
         private void _stopIdleThread()
         {
-            _idleThreadDone.Cancel();
-            _idleThread.Join();
-            _idleThreadDone.Dispose();
-            _idleThreadDone = null;
+            if (_idleThreadDone != null)
+            {
+                _idleThreadDone.Cancel();
+                _idleThread.Join();
+                _idleThreadDone.Dispose();
+                _idleThreadDone = null;
+            }
         }
 
-        private static void IdleLoop(object state)
+        private static void _idleLoop(object state)
         {
             var idleState = (IdleState)state;
 
@@ -243,6 +261,7 @@ namespace Core.Models
                 if (disposing)
                 {
                     _client.Dispose();
+                    _idleClient.Dispose();
                     _idleThreadDone.Dispose();
                 }
                 ImapClientModelsDictionary.TryRemove(_login + _password, out var _);
