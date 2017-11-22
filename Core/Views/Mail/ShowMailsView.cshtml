@@ -7,18 +7,23 @@
     <link rel="Stylesheet" href="@Href("~/css/styles.css")" />
 }
 
+@model Core.Models.ImapClientModel
+
 @section Scripts {
     <script>
+
+        // hides message and shows headers
         function CloseMessage() {
             $("#messageContent").hide();
-            $("#mailsContent").show();
-            $('messageSpinner').hide();
+            $("#headersContent").show();
+            $('#messageSpinner').hide();
         }
 
+
+        // hides spinner and shows message
         function ShowMessage(data) {
-            console.log(data);
             $("#messageContent").show();
-            $("#mailsContent").hide();
+            $("#headersContent").hide();
             $("#messageSpinner").hide();
 
             $("#messageSubject").text(data.subject)
@@ -26,9 +31,46 @@
             $("#messageBody").html(data.body);
         }
 
+        // ajax for refreshing headers
+        function ajaxCallRefresh(methodUrl) {
+            $.ajax({
+                type: 'GET',
+                url: methodUrl,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    // loads partial view into headers content
+                    $('#headersContent').html(data);
+                },
+                failure: function (data) {
+                    console.log("Failure");
+                    console.log(data);
+                },
+                error: function (data) {
+                    console.log("Error");
+                    console.log(data);
+                }
+            });
+        }
+
+        // reloads headers
+        function refreshHeaders() {
+             var url = '@Url.Action("ReceiveMail", "Mail")';
+             ajaxCallRefresh(url);
+        }
+
+        function refreshHeadersPeriodically() {
+            var url = '@Url.Action("PeriodicallyRefreshMail", "Mail")';
+            ajaxCallRefresh(url);
+        }
+
+        // call refresh after 60secs
+        window.setInterval(refreshHeadersPeriodically, 60000);
+
+
+        // show spinner and after getting message from server shows it
         function GetMessage(folderName,id) {
             $("#messageSpinner").show();
-            $("#mailsContent").hide();
+            $("#headersContent").hide();
 
             $("#messageSpinner").addClass("loader");
             $("#messageSpinner").show();
@@ -53,29 +95,26 @@
             });
         };
 
+        // adds function to headers button to show their message
         function AddActionToHeaders() {
-            var buttons = $("#mailsContent").find('a');
+            var buttons = $("#headersContent").find('a');
             $.each(buttons, function (index, value) {
                 $(value).click(function () {
                     GetMessage("@Model.ActiveFolder", value.id);
                 });
             });
-
         };
         AddActionToHeaders();
+
     </script>
 }
-
-@model Core.Models.ImapClientModel
 
 <div>
     <div id="actionsRow">
         <form asp-action="CreateMail" method="get" id="createMail" style="float:left">
             <input class="button" type="submit" value="Create new">
         </form>
-        <form asp-action="ReceiveMail" method="get" id="receiveMail" style="float:left">
-            <input class="button" type="submit" value="Receive">
-        </form>
+        <input class="button" type="button" value="Receive" onclick="refreshHeaders();"/>
     </div>
 
     <div id="mailsDiv">
@@ -89,7 +128,7 @@
         </div>
 
         <div id="mailsColumn">
-            <div id="mailsContent" class="content">
+            <div id="headersContent" class="content">
                 @{
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);
                 }

@@ -70,6 +70,7 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #F1F1F1;
     flex-grow: 1;
     height: 800px;
+    overflow: auto;
 }
 
 #mailsContent {
@@ -100,6 +101,18 @@ h1, h2, h3, h4, h5, h6 {
     padding: 14px 20px;
     border: none;
     cursor: pointer;
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+.button:hover {
+    background-color: #6CCF70;
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    cursor: pointer;
+    margin-left: 1px;
+    margin-right: 1px;
 }
 
 .folders {
