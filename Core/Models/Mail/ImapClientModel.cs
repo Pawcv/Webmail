@@ -125,18 +125,24 @@ namespace Core.Models
 
         private void _downloadMessage(string folderName, UniqueId uid)
         {
-            var folder = _client.GetFolder(folderName);
-            folder.Open(FolderAccess.ReadOnly);
-            _messages[Tuple.Create(folderName, uid)] = folder.GetMessage(uid);
-            folder.Close();
+            lock (_client.SyncRoot)
+            {
+                var folder = _client.GetFolder(folderName);
+                folder.Open(FolderAccess.ReadOnly);
+                _messages[Tuple.Create(folderName, uid)] = folder.GetMessage(uid);
+                folder.Close();
+            }
         }
 
 
         private void _downloadFolders()
         {
-            _folders.Clear();
-            var root = _client.GetFolder(_client.PersonalNamespaces[0]);
-            _downloadFoldersRecursively(root);
+            lock (_client.SyncRoot)
+            {
+                _folders.Clear();
+                var root = _client.GetFolder(_client.PersonalNamespaces[0]);
+                _downloadFoldersRecursively(root);
+            }
         }
 
         private void _downloadFoldersRecursively(IMailFolder folder)
@@ -153,10 +159,13 @@ namespace Core.Models
 
         private void _downloadHeaders(string folderName)
         {
-            var folder = _client.GetFolder(folderName);
-            folder.Open(FolderAccess.ReadOnly);
-            _headers[folderName] = folder.Fetch(0, -1, MessageSummaryItems.Full | MessageSummaryItems.UniqueId);
-            folder.Close();
+            lock (_client.SyncRoot)
+            {
+                var folder = _client.GetFolder(folderName);
+                folder.Open(FolderAccess.ReadOnly);
+                _headers[folderName] = folder.Fetch(0, -1, MessageSummaryItems.Full | MessageSummaryItems.UniqueId);
+                folder.Close();
+            }
         }
 
         private void _subscribeAllFolders()
@@ -169,18 +178,21 @@ namespace Core.Models
 
         private void _subscribeFolder(string folderName)
         {
-            var folder = _idleClient.GetFolder(folderName);
-            folder.Open(FolderAccess.ReadOnly);
-
-            folder.MessageExpunged += (sender, e) =>
+            lock (_idleClient.SyncRoot)
             {
+                var folder = _idleClient.GetFolder(folderName);
+                folder.Open(FolderAccess.ReadOnly);
+
+                folder.MessageExpunged += (sender, e) =>
+                {
                 //TODO remove message from dictionary
                 _downloadHeaders(((ImapFolder)sender).FullName);
-            };
-            folder.CountChanged += (sender, e) =>
-            {
-                _downloadHeaders(((ImapFolder)sender).FullName);
-            };
+                };
+                folder.CountChanged += (sender, e) =>
+                {
+                    _downloadHeaders(((ImapFolder)sender).FullName);
+                };
+            }
         }
 
         private void _startIdleThread()
