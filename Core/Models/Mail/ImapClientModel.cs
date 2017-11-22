@@ -4,6 +4,7 @@ using MailKit.Net.Imap;
 using MailKit;
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Core.Models
 {
@@ -64,6 +65,8 @@ namespace Core.Models
         private List<IMailFolder> _folders;
         private IList<IMessageSummary> _headers;
         private Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage> _messages;
+        private Thread _idleThread;
+        private CancellationTokenSource _idleThreadDone;
         private bool _disposed;
 
         public ImapClientModel(string login, string password, string host, int port, bool useSsl)
@@ -75,7 +78,7 @@ namespace Core.Models
             _useSsl = useSsl;
             _messages = new Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage>();
             _client = new ImapClient();
-            ImapClientModelsDictionary.TryAdd(_login+_password, this);
+            ImapClientModelsDictionary.TryAdd(_login + _password, this);
         }
 
         public void Connect()
@@ -151,6 +154,81 @@ namespace Core.Models
             folder.Close();
         }
 
+        public void _subscribeFolder(IMailFolder folder)
+        {
+            folder.Open(FolderAccess.ReadOnly);
+
+            folder.MessageExpunged += (sender, e) =>
+            {
+
+            };
+            folder.CountChanged += (sender, e) =>
+            {
+
+            };
+        }
+
+        public void _startIdleThread()
+        {
+            _idleThreadDone = new CancellationTokenSource();
+            _idleThread = new Thread(IdleLoop);
+            _idleThread.Start(new IdleState(_client, _idleThreadDone.Token));
+        }
+
+        private void _stopIdleThread()
+        {
+            _idleThreadDone.Cancel();
+            _idleThread.Join();
+            _idleThreadDone.Dispose();
+            _idleThreadDone = null;
+        }
+
+        private static void IdleLoop(object state)
+        {
+            var idleState = (IdleState)state;
+
+            lock (idleState.Client.SyncRoot)
+            {
+                while (!idleState.IsCancellationRequested)
+                {
+                    using (var timeout = new CancellationTokenSource(new TimeSpan(0, 0, 10)))
+                    {
+                        try
+                        {
+                            idleState.SetTimeoutSource(timeout);
+
+                            if (idleState.Client.Capabilities.HasFlag(ImapCapabilities.Idle))
+                            {
+                                idleState.Client.Idle(timeout.Token, idleState.CancellationToken);
+                            }
+                            else
+                            {
+                                idleState.Client.NoOp(idleState.CancellationToken);
+
+                                WaitHandle.WaitAny(new[] { timeout.Token.WaitHandle, idleState.CancellationToken.WaitHandle });
+                            }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            break;
+                        }
+                        catch (ImapProtocolException)
+                        {
+                            break;
+                        }
+                        catch (ImapCommandException)
+                        {
+                            break;
+                        }
+                        finally
+                        {
+                            idleState.SetTimeoutSource(null);
+                        }
+                    }
+                }
+            }
+        }
+
         public void Dispose()
         {
             Dispose(true);
@@ -165,6 +243,7 @@ namespace Core.Models
                 if (disposing)
                 {
                     _client.Dispose();
+                    _idleThreadDone.Dispose();
                 }
                 ImapClientModelsDictionary.TryRemove(_login + _password, out var _);
                 _disposed = true;
@@ -177,3 +256,51 @@ namespace Core.Models
         }
     }
 }
+
+class IdleState
+{
+    readonly object mutex = new object();
+    CancellationTokenSource timeout;
+    public CancellationToken CancellationToken { get; private set; }
+    public CancellationToken DoneToken { get; private set; }
+    public ImapClient Client { get; private set; }
+
+    public bool IsCancellationRequested
+    {
+        get
+        {
+            return CancellationToken.IsCancellationRequested || DoneToken.IsCancellationRequested;
+        }
+    }
+
+    public IdleState(ImapClient client, CancellationToken doneToken, CancellationToken cancellationToken = default(CancellationToken))
+    {
+        this.CancellationToken = cancellationToken;
+        this.DoneToken = doneToken;
+        this.Client = client;
+
+        this.DoneToken.Register(CancelTimeout);
+    }
+
+    // gracefully cancel timeout
+    void CancelTimeout()
+    {
+        lock (mutex)
+        {
+            if (timeout != null)
+                timeout.Cancel();
+        }
+    }
+
+    public void SetTimeoutSource(CancellationTokenSource source)
+    {
+        lock (mutex)
+        {
+            timeout = source;
+
+            if (timeout != null && IsCancellationRequested)
+                timeout.Cancel();
+        }
+    }
+}
+
