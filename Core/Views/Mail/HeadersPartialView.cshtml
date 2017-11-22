@@ -1,6 +1,14 @@
-﻿
+﻿@model Core.Models.ImapClientModel
+
 <div class="list-group">
     <h3><span id="activeFolder" class="label label-default">@Model.ActiveFolder </span></h3>
+    
+    <form asp-controller="Mail" asp-action="SortHeaders" >
+        <select name="orderType" asp-items="@Model.GetOrderTypes()">
+            <option></option>
+        </select>
+        <input type="submit" value="Sort" />
+    </form>
 
     @foreach (var summary in Model.Headers)
     {

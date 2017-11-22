@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Webmail.Smtp;
 using MimeKit;
 using System.Linq;
+using System.Collections.Generic;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -22,7 +23,6 @@ namespace Core.Controllers
     [Authorize]
     public class MailController : Controller
     {
-
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
@@ -205,6 +205,43 @@ namespace Core.Controllers
             };
 
             return new JsonResult(data);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SortHeaders(string orderType)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users
+               .Include(appUser => appUser.ImapConfigurations)
+               .SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            // for now using only one configuration
+            var firstImapConf = user.ImapConfigurations.First();
+
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
+            {
+                model = model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
+            }
+
+            var order = new MailKit.Search.OrderBy[]
+            {
+                ImapClientModel.OrderTypes.GetValueOrDefault(orderType, MailKit.Search.OrderBy.Date)
+            };
+            model.SortHeaders(order);
+
+            return View("ShowMailsView", model);
         }
     }
 }

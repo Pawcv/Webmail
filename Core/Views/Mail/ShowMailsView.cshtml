@@ -57,7 +57,7 @@
             var buttons = $("#mailsContent").find('a');
             $.each(buttons, function (index, value) {
                 $(value).click(function () {
-                    GetMessage("@Model.ActiveFolder", index + 1);
+                    GetMessage("@Model.ActiveFolder", $(value).attr('id'));
                 });
             });
 
@@ -78,7 +78,6 @@
     <div id="mailsDiv">
         <div id="foldersColumn">
             <div id="foldersContent" class="content">
-                <p> Foldery</p>
                 @{
                     Html.RenderPartial("FolderPartialView.cshtml", Model);
                 }

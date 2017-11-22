@@ -4,11 +4,22 @@ using MailKit.Net.Imap;
 using MailKit;
 using System;
 using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Core.Models
 {
     public class ImapClientModel : IDisposable
     {
+        public readonly static Dictionary<string, MailKit.Search.OrderBy> OrderTypes = new Dictionary<string, MailKit.Search.OrderBy>
+        {
+            {"Arrival", MailKit.Search.OrderBy.Arrival},
+            {"Reverse Arrival", MailKit.Search.OrderBy.ReverseArrival },
+            {"From", MailKit.Search.OrderBy.From },
+            {"Reverse From", MailKit.Search.OrderBy.ReverseFrom},
+            {"Subject", MailKit.Search.OrderBy.Subject },
+            {"Reverse Subject", MailKit.Search.OrderBy.ReverseSubject }
+        };
+
         public static ConcurrentDictionary<string, ImapClientModel> ImapClientModelsDictionary = new ConcurrentDictionary<string, ImapClientModel>();
 
         public string ActiveFolder
@@ -104,6 +115,19 @@ namespace Core.Models
                 _downloadMessage(folderName, uid);
             }
             return _messages[key];
+        }
+
+        public SelectList GetOrderTypes()
+        {
+            return new SelectList(OrderTypes, "Key", "Key");
+        }
+
+        public void SortHeaders(IList<MailKit.Search.OrderBy> order)
+        {
+            if (_headers != null)
+            {
+               _headers = MessageSorter.Sort(_headers, order);
+            }
         }
 
         private void _downloadMessage(string folderName, UniqueId uid)
