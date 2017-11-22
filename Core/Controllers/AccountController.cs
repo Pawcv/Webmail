@@ -257,11 +257,12 @@ namespace Core.Controllers
                 throw new ApplicationException($"User ID was not found in user claims!");
             }
 
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapConfigurations).SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
-            if (user.ImapModel != null)
+            var firstImapConf = user.ImapConfigurations.FirstOrDefault();
+            if (firstImapConf != null)
             {
-                if (ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+                if (ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
                 {
                     if (model.IsConnected)
                     {

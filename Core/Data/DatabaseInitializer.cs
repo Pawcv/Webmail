@@ -83,6 +83,7 @@ namespace Core.Data
                     return;
                 }
 
+                #region SmptConf
                 var smtpConfigurations = new List<SmtpConfiguration>
                 {
                     new SmtpConfiguration {
@@ -100,6 +101,29 @@ namespace Core.Data
                 }
 
                 await this._dbContext.SaveChangesAsync();
+                logger.Info($"Added SMTP configurations!");
+                #endregion
+
+                #region ImapConf
+                var imapConfigurations = new List<ImapConfiguration>
+                {
+                    new ImapConfiguration {
+                        Login ="asdf-67@wp.pl",
+                        Password = "asdF123$",
+                        Host = "imap.wp.pl",
+                        Port = 993,
+                        UseSsl = true
+                    }
+                };
+
+                foreach (var imapConfiguration in imapConfigurations)
+                {
+                    testAdmin.ImapConfigurations.Add(imapConfiguration);
+                }
+
+                await this._dbContext.SaveChangesAsync();
+                logger.Info($"Added IMAP configurations!");
+                #endregion
             }
             catch (Exception e)
             {
