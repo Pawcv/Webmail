@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
+using Webmail.Smtp;
 
 namespace Core.Models
 {
@@ -10,7 +11,7 @@ namespace Core.Models
     public class ApplicationUser : IdentityUser
     {
         public ProviderModel ImapModel { get; set; }
-
         
+        public ICollection<SmtpConfiguration> SmtpConfigurations { get; set; } = new List<SmtpConfiguration>();
     }
 }
