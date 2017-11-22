@@ -40,6 +40,7 @@
                 success: function (data) {
                     // loads partial view into headers content
                     $('#headersContent').html(data);
+                    AddActionToHeaders();
                 },
                 failure: function (data) {
                     console.log("Failure");
