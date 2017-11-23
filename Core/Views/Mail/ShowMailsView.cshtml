@@ -19,6 +19,13 @@
             $('#messageSpinner').hide();
         }
 
+        // shows spinner, hides message and headers
+        function ShowSpinner() {
+            $("#messageContent").hide();
+            $("#headersContent").hide();
+            $('#messageSpinner').show();
+        }
+
 
         // hides spinner and shows message
         function ShowMessage(data) {
@@ -63,12 +70,8 @@
 
 
         // show spinner and after getting message from server shows it
-        function GetMessage(folderName,id) {
-            $("#messageSpinner").show();
-            $("#headersContent").hide();
-
-            $("#messageSpinner").addClass("loader");
-            $("#messageSpinner").show();
+        function GetMessage(folderName, id) {
+            ShowSpinner();
 
             $.ajax({
                 type: 'GET',
@@ -101,6 +104,13 @@
         };
         AddActionToHeaders();
 
+
+        // makes buttons in folders content non-clickable
+        function BlockFolders() {
+            ShowSpinner();
+            $("#foldersContent").find('button').addClass("disabled");
+        }
+
     </script>
 }
 
@@ -110,7 +120,7 @@
             <input class="button" type="submit" value="Create new">
         </form>
         <form asp-action="ReceiveMail" method="get" id="receiveMail" style="float:left">
-            <input class="button" type="submit" value="Receive">
+            <input class="button" type="submit" value="Receive" onclick="BlockFolders()">
         </form>
     </div>
 
@@ -134,7 +144,7 @@
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);
                 }
             </div>
-            <div id="messageSpinner"></div>
+            <div id="messageSpinner" class="loader"></div>
             <div id="messageContent" class="content">
                 <a href="#" onclick="CloseMessage()" id="cancel" class="btn btn-default">Close message</a>
                 <div class="panel panel-default">
