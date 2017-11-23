@@ -33,6 +33,7 @@ namespace Core.Models
                     _headers = null;
                 }
                 _activeFolder = value;
+                HeadersToShow = Headers;
             }
         }
 
@@ -62,6 +63,8 @@ namespace Core.Models
             }
         }
 
+        public IList<IMessageSummary> HeadersToShow { get; set; }
+
         public bool IsConnected => _client.IsConnected;
 
         private readonly string _login;
@@ -87,6 +90,22 @@ namespace Core.Models
             _messages = new Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage>();
             _client = new ImapClient();
             ImapClientModelsDictionary.TryAdd(_login+_password, this);
+        }
+
+        public void FindPhraseInCurrFolder(string phrase)
+        {
+            HeadersToShow = new List<IMessageSummary>();
+            foreach (var header in Headers)
+            {
+                MimeKit.MimeMessage message = GetMessage(ActiveFolder, header.UniqueId);
+                String messegeBody = header.Envelope.Subject + ' ' + header.Envelope.From + ' ';
+                messegeBody += message.HtmlBody == null ? message.TextBody : message.HtmlBody;
+                if (messegeBody.ToLower().Contains(phrase))
+                {
+                    HeadersToShow.Add(header);
+                }
+            }
+
         }
 
         public void Connect()

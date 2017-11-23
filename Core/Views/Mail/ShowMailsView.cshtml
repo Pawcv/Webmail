@@ -85,6 +85,10 @@
         </div>
 
         <div id="mailsColumn">
+            <form asp-action="SearchCurrentFolder" method="get" id="searchCurrentFolder">
+                <input type="text" id="searchPhrase" name="searchPhrase">
+                <input class="search_button" type="submit" value="Search current folder">
+            </form>
             <div id="mailsContent" class="content">
                 @{
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);
@@ -92,7 +96,7 @@
             </div>
             <div id="messageSpinner"></div>
             <div id="messageContent" class="content">
-                <a href="#" onclick="CloseMessage()" id="cancel" name="cancel" class="btn btn-default">Close message</a>
+                <a href="#" onclick="CloseMessage()" id="cancel" class="btn btn-default">Close message</a>
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 id="messageFrom" class="panel-heading"></h4>

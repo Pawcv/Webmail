@@ -10,7 +10,7 @@
         <input type="submit" value="Sort" />
     </form>
 
-    @foreach (var summary in Model.Headers)
+    @foreach (var summary in Model.HeadersToShow)
     {
         <a href="#" id="@summary.UniqueId" class="list-group-item">@summary.UniqueId - @summary.Envelope.Subject (@summary.Envelope.From)</a>
     }
