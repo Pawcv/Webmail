@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Webmail.Smtp;
 using MimeKit;
+using System.Linq;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -52,25 +53,31 @@ namespace Core.Controllers
                 throw new ApplicationException($"User ID was not found in user claims!");
             }
 
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
             if (user == null)
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            if (user.ImapModel == null)
+            if (!user.ImapConfigurations.Any())
             {
-                return RedirectToAction("SelectImapProvider", "Manage");
+                return RedirectToAction(nameof(ManageController.SelectImapProvider), "Manage");
             }
 
-            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            // for now using only one configuration
+            var firstImapConf = user.ImapConfigurations.First();
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
             {
-                model = new ImapClientModel(user.ImapModel.login,
-                    user.ImapModel.password,
-                    user.ImapModel.ImapHost,
-                    user.ImapModel.ImapPort,
-                    user.ImapModel.useSsl);
+                model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
             }
 
             if (!model.IsConnected)
@@ -79,6 +86,35 @@ namespace Core.Controllers
                 model.ActiveFolder = "INBOX";
             }
 
+            return View("ShowMailsView", model);
+        }
+
+        public async Task<IActionResult> SearchCurrentFolder(string searchPhrase)
+        {
+            searchPhrase = WebUtility.UrlDecode(searchPhrase);
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapConfigurations).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            var firstImapConf = user.ImapConfigurations.First();
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
+            {
+                model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
+            }
+
+            model.FindPhraseInCurrFolder(searchPhrase);
             return View("ShowMailsView", model);
         }
 
@@ -93,15 +129,21 @@ namespace Core.Controllers
                 throw new ApplicationException($"User ID was not found in user claims!");
             }
 
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
-            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            // for now using only one configuration
+            var firstImapConf = user.ImapConfigurations.First();
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
             {
-                model = new ImapClientModel(user.ImapModel.login,
-                    user.ImapModel.password,
-                    user.ImapModel.ImapHost,
-                    user.ImapModel.ImapPort,
-                    user.ImapModel.useSsl);
+                model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
             }
 
             model.ActiveFolder = folderName;
@@ -112,15 +154,6 @@ namespace Core.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-
-        [HttpPost]
-        public IActionResult ImapClientTest(string login, string password, string host, int port, bool useSsl)
-        {
-            var imapClientModel = new ImapClientModel(login, password, host, port, useSsl);
-            imapClientModel.Connect();
-            imapClientModel.ActiveFolder = "INBOX";
-            return View("ShowMailsView", imapClientModel);
         }
 
         public IActionResult CreateMail()
@@ -139,17 +172,17 @@ namespace Core.Controllers
                 throw new ApplicationException($"User ID was not found in user claims!");
             }
 
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.SmtpConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
-            var securityOptions = MailKit.Security.SecureSocketOptions.Auto;
-            if (user.ImapModel.useSsl)
-            {
-                securityOptions = MailKit.Security.SecureSocketOptions.SslOnConnect;
-            }
-            var sender = new MailSender(new NetworkCredential(user.ImapModel.login, user.ImapModel.password), user.ImapModel.SmtpHost, user.ImapModel.SmtpPort, securityOptions);
+            // for now using only one configuration
+            var firstSmtpConf = user.SmtpConfigurations.First();
+
+            var sender = new MailSender(firstSmtpConf);
 
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(user.UserName, user.ImapModel.login));
+            message.From.Add(new MailboxAddress(user.UserName, firstSmtpConf.Username));
             message.To.Add(new MailboxAddress(model.Recipent, model.Recipent));
             message.Subject = model.Title;
 
@@ -224,15 +257,21 @@ namespace Core.Controllers
                 throw new ApplicationException($"User ID was not found in user claims!");
             }
 
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
-            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            // for now using only one configuration
+            var firstImapConf = user.ImapConfigurations.First();
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
             {
-                model = new ImapClientModel(user.ImapModel.login,
-                    user.ImapModel.password,
-                    user.ImapModel.ImapHost,
-                    user.ImapModel.ImapPort,
-                    user.ImapModel.useSsl);
+                model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
             }
 
             folderName = WebUtility.UrlDecode(folderName);

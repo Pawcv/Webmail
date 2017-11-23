@@ -16,6 +16,7 @@ using Core.Services;
 using Core.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Webmail.Smtp;
 
 namespace Core.Controllers
 {
@@ -480,18 +481,33 @@ namespace Core.Controllers
                 throw new ApplicationException($"User ID was not found in user claims!");
             }
 
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .Include(appUser => appUser.SmtpConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
             var model = new ProviderViewModel();
-            if (user.ImapModel != null)
-            { 
-                model.imaphost = user.ImapModel.ImapHost;
-                model.login = user.ImapModel.login;
-                model.password = user.ImapModel.password;
-                model.imapport = user.ImapModel.ImapPort;
-                model.smtphost = user.ImapModel.SmtpHost;
-                model.smtpport = user.ImapModel.SmtpPort;
-                model.useSsl = user.ImapModel.useSsl;
+
+            var firstImapConf = user.ImapConfigurations.FirstOrDefault();
+            if (firstImapConf != null)
+            {
+                model.imaphost = firstImapConf.Host;
+                model.imapport = firstImapConf.Port;
+                model.login = firstImapConf.Login;
+                model.password = firstImapConf.Password;
+                model.useSsl = firstImapConf.UseSsl;
+            }
+
+            var firstSmtpConf = user.SmtpConfigurations.FirstOrDefault();
+            if (firstSmtpConf != null)
+            {
+                model.smtphost = firstSmtpConf.Host;
+                model.smtpport = firstSmtpConf.Port;
+                // some overriding here - ProviderViewModel assumes that
+                // IMAP and SMPT shares password and SSL settings
+                model.login = firstSmtpConf.Username;
+                model.password = firstSmtpConf.Password;
+                model.useSsl = firstImapConf.UseSsl;
             }
 
             return View(model);
@@ -514,33 +530,51 @@ namespace Core.Controllers
                 throw new ApplicationException($"User ID was not found in user claims!");
             }
 
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .Include(appUser => appUser.SmtpConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
-            var imapModel = user.ImapModel;
-            if (imapModel == null)
+            var firstSmtpConf = user.SmtpConfigurations.FirstOrDefault();
+            var smtpConfFromModel = new SmtpConfiguration
             {
-                user.ImapModel = new ProviderModel()
-                {
-                    login = model.login,
-                    ImapHost = model.imaphost,
-                    ImapPort = model.imapport,
-                    SmtpHost = model.smtphost,
-                    SmtpPort = model.smtpport,
-                    password = model.password,
-                    useSsl = model.useSsl,
-                };
-            } else
+                Host = model.smtphost,
+                Port = model.smtpport,
+                Username = model.login,
+                Password = model.password,
+                SecureSocketOptions = model.useSsl ? MailKit.Security.SecureSocketOptions.SslOnConnect : MailKit.Security.SecureSocketOptions.Auto
+            };
+
+            if (firstSmtpConf == null)
             {
-                user.ImapModel.login = model.login;
-                user.ImapModel.ImapHost = model.imaphost;
-                user.ImapModel.ImapPort = model.imapport;
-                user.ImapModel.SmtpHost = model.smtphost;
-                user.ImapModel.SmtpPort = model.smtpport;
-                user.ImapModel.password = model.password;
-                user.ImapModel.useSsl = model.useSsl;
+                user.SmtpConfigurations.Add(smtpConfFromModel);
             }
-            await _userManager.UpdateAsync(user);
-            
+            else
+            {
+                firstSmtpConf.OverrideWith(smtpConfFromModel);
+            }
+
+            var firstImapConf = user.ImapConfigurations.FirstOrDefault();
+            var imapConfFromModel = new ImapConfiguration
+            {
+                Host = model.imaphost,
+                Port = model.imapport,
+                Login = model.login,
+                Password = model.password,
+                UseSsl = model.useSsl
+            };
+
+            if (firstImapConf == null)
+            {
+                user.ImapConfigurations.Add(imapConfFromModel);
+            }
+            else
+            {
+                firstImapConf.OverrideWith(imapConfFromModel);
+            }
+
+            await this._dbContext.SaveChangesAsync();
+
             StatusMessage = "Your imap provider has been updated";
             return RedirectToAction(nameof(Index));
         }

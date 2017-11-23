@@ -12,7 +12,15 @@ namespace Core.Models
     {
         public static ConcurrentDictionary<string, ImapClientModel> ImapClientModelsDictionary = new ConcurrentDictionary<string, ImapClientModel>();
 
-        public string ActiveFolder { get; set; }
+        public string ActiveFolder
+        {
+            get => _activeFolder;
+            set
+            {
+                _activeFolder = value;
+                HeadersToShow = Headers;
+            }
+        }
 
         public List<IMailFolder> Folders
         {
@@ -45,6 +53,8 @@ namespace Core.Models
             }
         }
 
+        public IList<IMessageSummary> HeadersToShow { get; set; }
+
         public bool IsConnected => _client.IsConnected;
 
         private readonly string _login;
@@ -54,6 +64,7 @@ namespace Core.Models
         private readonly bool _useSsl;
 
         private readonly ImapClient _client;
+        private string _activeFolder;
         private List<IMailFolder> _folders;
         private ConcurrentDictionary<string, IList<IMessageSummary>> _headers; //key: folder name
         private Dictionary<Tuple<string, UniqueId>, MimeKit.MimeMessage> _messages;
@@ -74,6 +85,22 @@ namespace Core.Models
             _client = new ImapClient();
             _idleClient = new ImapClient();
             ImapClientModelsDictionary.TryAdd(_login + _password, this);
+        }
+
+        public void FindPhraseInCurrFolder(string phrase)
+        {
+            HeadersToShow = new List<IMessageSummary>();
+            foreach (var header in Headers)
+            {
+                MimeKit.MimeMessage message = GetMessage(ActiveFolder, header.UniqueId);
+                String messegeBody = header.Envelope.Subject + ' ' + header.Envelope.From + ' ';
+                messegeBody += message.HtmlBody == null ? message.TextBody : message.HtmlBody;
+                if (messegeBody.ToLower().Contains(phrase))
+                {
+                    HeadersToShow.Add(header);
+                }
+            }
+
         }
 
         public void Connect()
@@ -185,8 +212,8 @@ namespace Core.Models
 
                 folder.MessageExpunged += (sender, e) =>
                 {
-                //TODO remove message from dictionary
-                _downloadHeaders(((ImapFolder)sender).FullName);
+                    //TODO remove message from dictionary
+                    _downloadHeaders(((ImapFolder)sender).FullName);
                 };
                 folder.CountChanged += (sender, e) =>
                 {

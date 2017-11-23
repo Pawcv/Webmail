@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using System;
 using System.Collections.Generic;
 
 namespace Core.Data.Migrations
 {
-    public partial class ImapProvider : Migration
+    public partial class AddedSmtpConfigurations : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -20,32 +21,29 @@ namespace Core.Data.Migrations
                 name: "RoleNameIndex",
                 table: "AspNetRoles");
 
-            migrationBuilder.AddColumn<Guid>(
-                name: "ImapModel_id",
-                table: "AspNetUsers",
-                type: "uniqueidentifier",
-                nullable: true);
-
             migrationBuilder.CreateTable(
-                name: "ImapProviderModel",
+                name: "SmtpConfigurations",
                 columns: table => new
                 {
-                    _id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    host = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    login = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    port = table.Column<int>(type: "int", nullable: false),
-                    useSsl = table.Column<bool>(type: "bit", nullable: false)
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    ApplicationUserId = table.Column<string>(nullable: true),
+                    Host = table.Column<string>(nullable: true),
+                    Password = table.Column<string>(nullable: true),
+                    Port = table.Column<int>(nullable: false),
+                    SecureSocketOptions = table.Column<int>(nullable: false),
+                    Username = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ImapProviderModel", x => x._id);
+                    table.PrimaryKey("PK_SmtpConfigurations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SmtpConfigurations_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AspNetUsers_ImapModel_id",
-                table: "AspNetUsers",
-                column: "ImapModel_id");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
@@ -61,13 +59,10 @@ namespace Core.Data.Migrations
                 unique: true,
                 filter: "[NormalizedName] IS NOT NULL");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_AspNetUsers_ImapProviderModel_ImapModel_id",
-                table: "AspNetUsers",
-                column: "ImapModel_id",
-                principalTable: "ImapProviderModel",
-                principalColumn: "_id",
-                onDelete: ReferentialAction.Restrict);
+            migrationBuilder.CreateIndex(
+                name: "IX_SmtpConfigurations_ApplicationUserId",
+                table: "SmtpConfigurations",
+                column: "ApplicationUserId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUserTokens_AspNetUsers_UserId",
@@ -81,19 +76,11 @@ namespace Core.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_AspNetUsers_ImapProviderModel_ImapModel_id",
-                table: "AspNetUsers");
-
-            migrationBuilder.DropForeignKey(
                 name: "FK_AspNetUserTokens_AspNetUsers_UserId",
                 table: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "ImapProviderModel");
-
-            migrationBuilder.DropIndex(
-                name: "IX_AspNetUsers_ImapModel_id",
-                table: "AspNetUsers");
+                name: "SmtpConfigurations");
 
             migrationBuilder.DropIndex(
                 name: "UserNameIndex",
@@ -102,10 +89,6 @@ namespace Core.Data.Migrations
             migrationBuilder.DropIndex(
                 name: "RoleNameIndex",
                 table: "AspNetRoles");
-
-            migrationBuilder.DropColumn(
-                name: "ImapModel_id",
-                table: "AspNetUsers");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
