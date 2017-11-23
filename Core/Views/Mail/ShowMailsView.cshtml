@@ -108,7 +108,7 @@
         // makes buttons in folders content non-clickable
         function BlockFolders() {
             ShowSpinner();
-            $("#foldersContent").find('button').addClass("disabled");
+            $("#foldersContent").find('button').attr('disabled', 'disabled').addClass("disabled");
         }
 
     </script>
