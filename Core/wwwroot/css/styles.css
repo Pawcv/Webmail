@@ -89,6 +89,19 @@ h1, h2, h3, h4, h5, h6 {
     overflow: auto;
 }
 
+#search_phrase {
+    width: 79%;
+}
+
+.search_button {
+    width: 20%;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 3px 3px;
+}
+
 .content {
     width: 100%;
     height: 100%;

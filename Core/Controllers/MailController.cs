@@ -88,6 +88,32 @@ namespace Core.Controllers
             return View("ShowMailsView", model);
         }
 
+        public async Task<IActionResult> SearchCurrentFolder(string search_phrase)
+        {
+            search_phrase = WebUtility.UrlDecode(search_phrase);
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            {
+                model = new ImapClientModel(user.ImapModel.login,
+                    user.ImapModel.password,
+                    user.ImapModel.ImapHost,
+                    user.ImapModel.ImapPort,
+                    user.ImapModel.useSsl);
+            }
+
+            model.FindPhraseInCurrFolder(search_phrase);
+            return View("ShowMailsView", model);
+        }
+
         public async Task<IActionResult> ChangeActiveFolder(string folderName)
         {
             folderName = WebUtility.UrlDecode(folderName);
