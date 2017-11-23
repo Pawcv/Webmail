@@ -192,6 +192,7 @@ namespace Core.Models
                 folder.Open(FolderAccess.ReadOnly);
                 _headers[folderName] = folder.Fetch(0, -1, MessageSummaryItems.Full | MessageSummaryItems.UniqueId);
                 folder.Close();
+                ActiveFolder = folderName;
             }
         }
 
