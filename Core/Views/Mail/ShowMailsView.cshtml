@@ -89,6 +89,13 @@
                 <input type="text" id="searchPhrase" name="searchPhrase">
                 <input class="search_button" type="submit" value="Search current folder">
             </form>
+
+            <form asp-controller="Mail" method="get" asp-action="SortHeaders" style="margin-top: 2px;">
+                <select name="orderType" id="orderType" asp-items="@Model.GetOrderTypes()">
+                </select>
+                <input class="search_button" type="submit" value="Sort" />
+            </form>
+
             <div id="mailsContent" class="content">
                 @{
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);

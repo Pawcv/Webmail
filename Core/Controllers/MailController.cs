@@ -113,7 +113,10 @@ namespace Core.Controllers
                     firstImapConf.UseSsl);
             }
 
-            model.FindPhraseInCurrFolder(searchPhrase);
+            
+            if (searchPhrase != null) { 
+                model.FindPhraseInCurrFolder(searchPhrase);
+            }
             return View("ShowMailsView", model);
         }
 
@@ -236,7 +239,7 @@ namespace Core.Controllers
             return new JsonResult(data);
         }
 
-        [HttpPost]
+        [HttpGet]
         public async Task<IActionResult> SortHeaders(string orderType)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

@@ -89,8 +89,13 @@ h1, h2, h3, h4, h5, h6 {
     overflow: auto;
 }
 
-#search_phrase {
+#searchPhrase {
     width: 79%;
+}
+
+#orderType {
+    width: 79%;
+    padding: 3px 3px;
 }
 
 .search_button {

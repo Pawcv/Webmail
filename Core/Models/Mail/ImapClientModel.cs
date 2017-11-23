@@ -143,9 +143,9 @@ namespace Core.Models
 
         public void SortHeaders(IList<MailKit.Search.OrderBy> order)
         {
-            if (_headers != null)
+            if (HeadersToShow != null)
             {
-               _headers = MessageSorter.Sort(_headers, order);
+                HeadersToShow = MessageSorter.Sort(HeadersToShow, order);
             }
         }
 
