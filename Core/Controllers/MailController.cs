@@ -205,15 +205,21 @@ namespace Core.Controllers
                 throw new ApplicationException($"User ID was not found in user claims!");
             }
 
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
-            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            // for now using only one configuration
+            var firstImapConf = user.ImapConfigurations.First();
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
             {
-                model = new ImapClientModel(user.ImapModel.login,
-                    user.ImapModel.password,
-                    user.ImapModel.ImapHost,
-                    user.ImapModel.ImapPort,
-                    user.ImapModel.useSsl);
+                model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
             }
 
             model.Refresh();
@@ -231,15 +237,21 @@ namespace Core.Controllers
                 throw new ApplicationException($"User ID was not found in user claims!");
             }
 
-            var user = await _dbContext.Users.Include(appUser => appUser.ImapModel).SingleOrDefaultAsync(appUser => appUser.Id == userId);
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
 
-            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(user.ImapModel.login + user.ImapModel.password, out var model))
+            // for now using only one configuration
+            var firstImapConf = user.ImapConfigurations.First();
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
             {
-                model = new ImapClientModel(user.ImapModel.login,
-                    user.ImapModel.password,
-                    user.ImapModel.ImapHost,
-                    user.ImapModel.ImapPort,
-                    user.ImapModel.useSsl);
+                model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
             }
 
             // without refresh, new messages should be downloaded
