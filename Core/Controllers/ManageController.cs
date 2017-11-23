@@ -575,7 +575,17 @@ namespace Core.Controllers
 
             await this._dbContext.SaveChangesAsync();
 
-            StatusMessage = "Your imap provider has been updated";
+            var newImapModel = new ImapClientModel(
+                 firstImapConf.Login,
+                 firstImapConf.Password,
+                 firstImapConf.Host,
+                 firstImapConf.Port,
+                 firstImapConf.UseSsl);
+
+            ImapClientModel.ImapClientModelsDictionary.AddOrUpdate(firstImapConf.Login + firstImapConf.Password, newImapModel,
+                ((key, oldValue) => newImapModel));
+
+          StatusMessage = "Your imap provider has been updated";
             return RedirectToAction(nameof(Index));
         }
         #region Helpers
