@@ -85,6 +85,7 @@ namespace Core.Controllers
                 model.Connect();
                 model.ActiveFolder = "INBOX";
             }
+
             return View("ShowMailsView", model);
         }
 
@@ -195,6 +196,70 @@ namespace Core.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ReceiveMail()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            // for now using only one configuration
+            var firstImapConf = user.ImapConfigurations.First();
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
+            {
+                model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
+            }
+
+            model.Refresh();
+
+            return View("ShowMailsView", model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PeriodicallyRefreshMail()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            // for now using only one configuration
+            var firstImapConf = user.ImapConfigurations.First();
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
+            {
+                model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
+            }
+
+            // without refresh, new messages should be downloaded
+
+            return PartialView("HeadersPartialView", model);
+        }
+
+        [HttpGet]
         public async Task<JsonResult> GetMessage(string folderName, int id)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -221,9 +286,11 @@ namespace Core.Controllers
                     firstImapConf.UseSsl);
             }
 
+            folderName = WebUtility.UrlDecode(folderName);
+
             string activeFolder = folderName == null ? "INBOX" : folderName;
 
-            MimeKit.MimeMessage message = model.GetMessage(activeFolder, (uint) id);
+            MimeKit.MimeMessage message = model.GetMessage(activeFolder, (uint)id);
             var messageBody = message.HtmlBody == null ? message.TextBody : message.HtmlBody;
 
             var data = new

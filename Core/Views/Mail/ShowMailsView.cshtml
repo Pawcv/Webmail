@@ -7,18 +7,30 @@
     <link rel="Stylesheet" href="@Href("~/css/styles.css")" />
 }
 
+@model Core.Models.ImapClientModel
+
 @section Scripts {
     <script>
+
+        // hides message and shows headers
         function CloseMessage() {
             $("#messageContent").hide();
-            $("#mailsContent").show();
-            $('messageSpinner').hide();
+            $("#headersContent").show();
+            $('#messageSpinner').hide();
         }
 
+        // shows spinner, hides message and headers
+        function ShowSpinner() {
+            $("#messageContent").hide();
+            $("#headersContent").hide();
+            $('#messageSpinner').show();
+        }
+
+
+        // hides spinner and shows message
         function ShowMessage(data) {
-            console.log(data);
             $("#messageContent").show();
-            $("#mailsContent").hide();
+            $("#headersContent").hide();
             $("#messageSpinner").hide();
 
             $("#messageSubject").text(data.subject)
@@ -26,12 +38,40 @@
             $("#messageBody").html(data.body);
         }
 
-        function GetMessage(folderName,id) {
-            $("#messageSpinner").show();
-            $("#mailsContent").hide();
+        // ajax for refreshing headers
+        function ajaxCallRefresh(methodUrl) {
+            $.ajax({
+                type: 'GET',
+                url: methodUrl,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    // loads partial view into headers content
+                    $('#headersContent').html(data);
+                    AddActionToHeaders();
+                },
+                failure: function (data) {
+                    console.log("Failure");
+                    console.log(data);
+                },
+                error: function (data) {
+                    console.log("Error");
+                    console.log(data);
+                }
+            });
+        }
 
-            $("#messageSpinner").addClass("loader");
-            $("#messageSpinner").show();
+        function refreshHeadersPeriodically() {
+            var url = '@Url.Action("PeriodicallyRefreshMail", "Mail")';
+            ajaxCallRefresh(url);
+        }
+
+        // call refresh after 10secs
+        window.setInterval(refreshHeadersPeriodically, 10000);
+
+
+        // show spinner and after getting message from server shows it
+        function GetMessage(folderName, id) {
+            ShowSpinner();
 
             $.ajax({
                 type: 'GET',
@@ -53,25 +93,34 @@
             });
         };
 
+        // adds function to headers button to show their message
         function AddActionToHeaders() {
-            var buttons = $("#mailsContent").find('a');
+            var buttons = $("#headersContent").find('a');
             $.each(buttons, function (index, value) {
                 $(value).click(function () {
-                    GetMessage("@Model.ActiveFolder", index + 1);
+                    GetMessage("@System.Net.WebUtility.UrlEncode(@Model.ActiveFolder)", value.id);
                 });
             });
-
         };
         AddActionToHeaders();
+
+
+        // makes buttons in folders content non-clickable
+        function BlockFolders() {
+            ShowSpinner();
+            $("#foldersContent").find('button').attr('disabled', 'disabled').addClass("disabled");
+        }
+
     </script>
 }
 
-@model Core.Models.ImapClientModel
-
 <div>
     <div id="actionsRow">
-        <form asp-action="CreateMail" method="get" id="createMail">
+        <form asp-action="CreateMail" method="get" id="createMail" style="float:left">
             <input class="button" type="submit" value="Create new">
+        </form>
+        <form asp-action="ReceiveMail" method="get" id="receiveMail" style="float:left">
+            <input class="button" type="submit" value="Receive" onclick="BlockFolders()">
         </form>
     </div>
 
@@ -90,12 +139,12 @@
                 <input type="text" id="searchPhrase" name="searchPhrase">
                 <input class="search_button" type="submit" value="Search current folder">
             </form>
-            <div id="mailsContent" class="content">
+            <div id="headersContent" class="content">
                 @{
                     Html.RenderPartial("HeadersPartialView.cshtml", Model);
                 }
             </div>
-            <div id="messageSpinner"></div>
+            <div id="messageSpinner" class="loader"></div>
             <div id="messageContent" class="content">
                 <a href="#" onclick="CloseMessage()" id="cancel" class="btn btn-default">Close message</a>
                 <div class="panel panel-default">
