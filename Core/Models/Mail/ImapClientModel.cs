@@ -150,6 +150,22 @@ namespace Core.Models
             _downloadHeaders(ActiveFolder);
         }
 
+        public void MoveMessage(string folderName, int uid)
+        {
+            IMailFolder activeFolder = this._folders.Find(e => e.Name == ActiveFolder);
+            IMailFolder destiantionFolder = this._folders.Find(e => e.Name == folderName);
+
+            if (activeFolder != null && destiantionFolder != null) {
+
+                // TODO: zrobić żeby działało
+                activeFolder.Open(FolderAccess.ReadWrite);
+
+                activeFolder.MoveTo(uid, destiantionFolder);
+
+                activeFolder.Close();
+            }
+        }
+
         private void _downloadMessage(string folderName, UniqueId uid)
         {
             lock (_client.SyncRoot)

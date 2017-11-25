@@ -302,5 +302,41 @@ namespace Core.Controllers
 
             return new JsonResult(data);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> MoveMail(string folderName, int messageId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            System.Console.Out.Write("\n\n");
+            System.Console.Out.Write(folderName);
+            System.Console.Out.Write(folderName == null);
+            System.Console.Out.Write("\n\n");
+            if (userId == null)
+            {
+                throw new ApplicationException($"User ID was not found in user claims!");
+            }
+
+            var user = await _dbContext.Users
+                .Include(appUser => appUser.ImapConfigurations)
+                .SingleOrDefaultAsync(appUser => appUser.Id == userId);
+
+            // for now using only one configuration
+            var firstImapConf = user.ImapConfigurations.First();
+
+            if (!ImapClientModel.ImapClientModelsDictionary.TryGetValue(firstImapConf.Login + firstImapConf.Password, out var model))
+            {
+                model = new ImapClientModel(
+                    firstImapConf.Login,
+                    firstImapConf.Password,
+                    firstImapConf.Host,
+                    firstImapConf.Port,
+                    firstImapConf.UseSsl);
+            }
+
+            model.MoveMessage(folderName, messageId);
+
+            return PartialView("HeadersPartialView", model);
+        }
     }
 }

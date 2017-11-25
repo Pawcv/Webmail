@@ -66,7 +66,7 @@
         }
 
         // call refresh after 10secs
-        window.setInterval(refreshHeadersPeriodically, 10000);
+        window.setInterval(refreshHeadersPeriodically, 100000);
 
 
         // show spinner and after getting message from server shows it
@@ -109,6 +109,51 @@
         function BlockFolders() {
             ShowSpinner();
             $("#foldersContent").find('button').attr('disabled', 'disabled').addClass("disabled");
+        }
+
+        function headerDragStart(event) {
+            event.dataTransfer.setData("text/plain", event.target.id);
+        }
+
+        function headerDragOver(event) {
+            event.preventDefault();
+        }
+
+        //after drop ends, send data to server
+        function headerOnDrop(event) {
+            event.preventDefault();
+
+            var headerId = event.dataTransfer.getData("text");
+            if (headerId) {
+                var target = event.target;
+                var folderName = $(target).text();
+
+                var url = '@Url.Action("MoveMail", "Mail")';
+                var data = {
+                    folderName: folderName,
+                    messageId: headerId
+                };
+
+                $.ajax({
+                    type: 'GET',
+                    data: data,
+                    contentType: "application/json; charset=utf-8",
+                    url: url,
+                    success: function (data) {
+                        $('#headersContent').html(data);
+                    },
+                    failure: function (data) {
+                        console.log("Failure to move message");
+                        console.log(data);
+                    },
+                    error: function (data) {
+                        CloseMessage();
+                        console.log("Error in moving message");
+                        console.log(data);
+                    }
+                });
+                
+            }
         }
 
     </script>
