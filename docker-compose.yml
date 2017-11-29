@@ -6,3 +6,15 @@ services:
     build:
       context: ./Core
       dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_CONNECTION_STRING=Server=db;Database=aspnet-Core-E535F54B-9832-4174-9EEC-ECA1919538D1;User=sa;Password=1337P@ssword;
+    ports:
+      - "80:80"
+    depends_on:
+       - db
+  db:
+    image: "microsoft/mssql-server-linux"
+    environment:
+        SA_PASSWORD: "1337P@ssword"
+        ACCEPT_EULA: "Y"
