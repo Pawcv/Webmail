@@ -567,6 +567,7 @@ namespace Core.Controllers
             if (firstImapConf == null)
             {
                 user.ImapConfigurations.Add(imapConfFromModel);
+                firstImapConf = imapConfFromModel;
             }
             else
             {
