@@ -14,23 +14,28 @@ namespace Core.Data
         private const string TestAdminEmail = "admin@admin.com";
         private const string TestAdminPass = "Admin1!";
 
-        private static ILogger logger = LogManager.GetCurrentClassLogger();
+        private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public DatabaseInitializer(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
         {
-            this._dbContext = dbContext;
-            this._userManager = userManager;
+            _dbContext = dbContext;
+            _userManager = userManager;
         }
 
         public void Initialize()
         {
             _dbContext.Database.Migrate();
+        }
 
-            this.AddTestAdminAsync().Wait();
-            this.SeedAsync().Wait();
+        public void Initialize(bool addAdmin)
+        {
+            Initialize();
+            if (!addAdmin) return;
+            AddTestAdminAsync().Wait();
+            SeedAsync().Wait();
         }
 
         private async Task AddTestAdminAsync()
@@ -50,16 +55,16 @@ namespace Core.Data
                         throw new InvalidOperationException("Failed to add first admin!");
                     }
 
-                    logger.Info($"TestAdmin succesffully added!");
+                    Logger.Info($"TestAdmin succesffully added!");
                 }
                 else
                 {
-                    logger.Info($"TestAdmin already exists in DB.");
+                    Logger.Info($"TestAdmin already exists in DB.");
                 }
             }
             catch (Exception e)
             {
-                logger.Warn($"Adding TestAdmin failed! Reason: {e}");
+                Logger.Warn($"Adding TestAdmin failed! Reason: {e}");
             }
         }
 
@@ -79,7 +84,7 @@ namespace Core.Data
                 var testAdmin = await this._dbContext.Users.SingleOrDefaultAsync(user => user.Email == TestAdminEmail);
                 if (testAdmin == null)
                 {
-                    logger.Warn("TestAdmin not in database, won't seed SmtpConf for him.");
+                    Logger.Warn("TestAdmin not in database, won't seed SmtpConf for him.");
                     return;
                 }
 
@@ -101,7 +106,7 @@ namespace Core.Data
                 }
 
                 await this._dbContext.SaveChangesAsync();
-                logger.Info($"Added SMTP configurations!");
+                Logger.Info($"Added SMTP configurations!");
                 #endregion
 
                 #region ImapConf
@@ -122,12 +127,12 @@ namespace Core.Data
                 }
 
                 await this._dbContext.SaveChangesAsync();
-                logger.Info($"Added IMAP configurations!");
+                Logger.Info($"Added IMAP configurations!");
                 #endregion
             }
             catch (Exception e)
             {
-                logger.Warn($"Seeding database failed! Reason: {e}");
+                Logger.Warn($"Seeding database failed! Reason: {e}");
             }
         }
     }

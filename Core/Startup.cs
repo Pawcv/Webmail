@@ -69,10 +69,7 @@ namespace Core
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            if (Debugger.IsAttached)
-            {
-                databaseInitializer.Initialize();
-            }
+            databaseInitializer.Initialize(Debugger.IsAttached);
         }
     }
 }
