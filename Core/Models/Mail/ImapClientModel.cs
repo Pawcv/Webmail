@@ -73,6 +73,13 @@ namespace Core.Models
             }
         }
 
+        public int NumberOfPages(string foldername) {
+            var folder = _client.GetFolder(foldername);
+            folder.Open(FolderAccess.ReadOnly);
+            double pages = (double)folder.Count / (double)HeadersPerPage;
+            return (int) Math.Ceiling(pages);
+        }
+
         private readonly string _login;
         private readonly string _password;
         private readonly string _host;

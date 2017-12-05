@@ -1,7 +1,14 @@
-﻿
+﻿@model Core.Models.ImapClientModel
+
 <div class="list-group">
     <h3><span id="activeFolder" class="label label-default">@Model.ActiveFolder </span></h3>
-
+    <h2><span class="label label-default"> @Model.Page</span></h2>
+    <ul class="pagination">
+        @for (var i = 0; i < Model.NumberOfPages(Model.ActiveFolder); i++)
+        {
+            <li id="@i"><a href='@Url.Action("GetPage", "Mail", new { page = @i })'>@i</a></li>
+        }
+    </ul>
     @foreach (var summary in Model.HeadersToShow)
     {
         <a href="#" id="@summary.UniqueId" class="list-group-item">@summary.Envelope.Subject (@summary.Envelope.From)</a>
