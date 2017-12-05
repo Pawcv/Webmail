@@ -9,8 +9,10 @@
             <li id="@i"><a href='@Url.Action("GetPage", "Mail", new { page = @i })'>@i</a></li>
         }
     </ul>
-    @foreach (var summary in Model.HeadersToShow)
-    {
-        <a href="#" id="@summary.UniqueId" class="list-group-item">@summary.Envelope.Subject (@summary.Envelope.From)</a>
-    }
+    <div id="headersTitles">
+        @foreach (var summary in Model.HeadersToShow)
+        {
+            <a href="#" id="@summary.UniqueId" class="list-group-item">@summary.Envelope.Subject (@summary.Envelope.From)</a>
+        }
+    </div>
 </div>
