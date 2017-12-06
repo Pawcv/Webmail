@@ -332,9 +332,9 @@ namespace Core.Models
             {
                 if (disposing)
                 {
+                    _stopIdleThread();
                     _client.Dispose();
                     _idleClient.Dispose();
-                    _idleThreadDone.Dispose();
                 }
                 ImapClientModelsDictionary.TryRemove(_login + _password, out var _);
                 _disposed = true;
