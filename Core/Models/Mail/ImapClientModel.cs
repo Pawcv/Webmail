@@ -18,6 +18,7 @@ namespace Core.Models
             set
             {
                 _activeFolder = value;
+                Page = 0;
                 HeadersToShow = Headers;
             }
         }
@@ -57,6 +58,28 @@ namespace Core.Models
 
         public bool IsConnected => _client.IsConnected;
 
+        public int HeadersPerPage { get; set; } = 25;
+        public int Page
+        {
+            get
+            {
+                return _page;
+            }
+            set
+            {
+                IList<IMessageSummary> tmp;
+                _headers.TryRemove(ActiveFolder, out tmp);
+                _page = value;
+            }
+        }
+
+        public int NumberOfPages(string foldername) {
+            var folder = _client.GetFolder(foldername);
+            folder.Open(FolderAccess.ReadOnly);
+            double pages = (double)folder.Count / (double)HeadersPerPage;
+            return (int) Math.Ceiling(pages);
+        }
+
         private readonly string _login;
         private readonly string _password;
         private readonly string _host;
@@ -72,6 +95,7 @@ namespace Core.Models
         private Thread _idleThread;
         private CancellationTokenSource _idleThreadDone;
         private bool _disposed;
+        private int _page = 0;
 
         public ImapClientModel(string login, string password, string host, int port, bool useSsl)
         {
@@ -190,9 +214,17 @@ namespace Core.Models
             {
                 var folder = _client.GetFolder(folderName);
                 folder.Open(FolderAccess.ReadOnly);
-                _headers[folderName] = folder.Fetch(0, -1, MessageSummaryItems.Full | MessageSummaryItems.UniqueId);
+
+                int min = Page * HeadersPerPage;
+                int max = min + HeadersPerPage - 1;
+                int count = folder.Count;
+                min = min >= count ? 0 : min;
+                max = max >= count ? -1 : max;
+
+                _headers[folderName] = folder.Fetch(min, max, MessageSummaryItems.Full | MessageSummaryItems.UniqueId);
                 folder.Close();
-                ActiveFolder = folderName;
+                _activeFolder = folderName;
+                HeadersToShow = Headers;
             }
         }
 
@@ -300,9 +332,9 @@ namespace Core.Models
             {
                 if (disposing)
                 {
+                    _stopIdleThread();
                     _client.Dispose();
                     _idleClient.Dispose();
-                    _idleThreadDone.Dispose();
                 }
                 ImapClientModelsDictionary.TryRemove(_login + _password, out var _);
                 _disposed = true;
